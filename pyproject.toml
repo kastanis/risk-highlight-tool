@@ -13,6 +13,7 @@ dependencies = [
 
     # Layer 1 — copy risk (NLP)
     "spacy>=3.8.14",      # NER, dependency parse, Matcher
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     # "textacy>=0.13.0",  # SVO extraction, direct quotations — floret fails on Py 3.13, defer to v2
 
     # Layer 2 — code risk (added when Layer 2 is built)
