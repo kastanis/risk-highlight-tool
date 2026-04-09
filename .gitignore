@@ -9,6 +9,8 @@
 analysis/*.ipynb
 analysis/archive/*.ipynb
 !analysis/notebook_templates/*.ipynb
+!analysis/layer1_copy_risk.ipynb
+!analysis/layer2_code_risk.ipynb
 
 scratch/*
 !scratch/.gitkeep
