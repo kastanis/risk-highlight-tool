@@ -13,7 +13,7 @@ dependencies = [
 
     # Layer 1 — copy risk (NLP)
     "spacy>=3.8.14",      # NER, dependency parse, Matcher
-    "textacy>=0.13.0",    # SVO extraction, direct quotations (built on spaCy)
+    # "textacy>=0.13.0",  # SVO extraction, direct quotations — floret fails on Py 3.13, defer to v2
 
     # Layer 2 — code risk (added when Layer 2 is built)
     # "nbformat"          # stdlib-adjacent, parse .ipynb cells
