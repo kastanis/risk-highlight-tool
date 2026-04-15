@@ -20,11 +20,14 @@ dependencies = [
     # "nbformat"          # stdlib-adjacent, parse .ipynb cells
     # "sqlfluff"          # SQL linting
 
-    # Layer 3 — notes recall (added when Layer 3 is built)
-    # "sentence-transformers"   # local embeddings, no external API
-    # "chromadb"                # local vector store
-    # "pdfplumber"              # PDF text extraction
-    # "google-api-python-client" # Google Drive ingestion
+    # Layer 3 — notes recall
+    "openai>=1.0.0",                 # embeddings + optional completions
+    "python-dotenv>=1.0.0",          # load .env for local dev
+    "pdfplumber>=0.11.0",            # PDF text extraction
+    "python-docx>=1.1.0",            # .docx extraction
+    # "sentence-transformers>=3.0.0" # local embeddings (local-only version)
+    # "chromadb>=0.5.0"              # local vector store (local-only version)
+    # "google-api-python-client"     # Google Drive ingestion (future)
 
     # UI
     "streamlit>=1.45.0",

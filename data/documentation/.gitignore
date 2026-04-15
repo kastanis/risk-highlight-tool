@@ -1,6 +1,0 @@
-# Allow .md docs and the source .docx
-# Block everything else (raw data, exports, etc.)
-*
-!.gitignore
-!*.md
-!*.docx
