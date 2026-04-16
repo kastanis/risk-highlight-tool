@@ -2,7 +2,7 @@
 
 *For Claude Code. Read this before touching any file.*
 
-**Last updated:** 2026-04-15
+**Last updated:** 2026-04-16
 **Repo:** `/Users/akastanis/Git_work/risk-highlight-tool`
 **Run environment:** `uv run` — always prefix Python commands with `uv run`
 
@@ -28,10 +28,10 @@ never decide truth, never rewrite anything.
 | Layer 2 | Example scripts | `analysis/layer2_examples/` | ✅ Done |
 | Layer 3 | Notes recall (RAG) | `ui/layer3_app.py` | ✅ Done — deployed on Streamlit Cloud |
 | UI — Layer 1 | Streamlit copy risk checker | `ui/layer1_app.py` | ✅ Done — deployed at risk-highlight-tool.streamlit.app |
-| UI — Layer 2 | Streamlit code risk checker | `ui/layer2_app.py` | ❌ Not started |
+| UI — Layer 2 | Streamlit code risk checker | `ui/layer2_app.py` | ✅ Done — tested against all 3 example scripts |
 | Analysis — Layer 3 | Notes recall notebook | `analysis/layer3_notes_recall.ipynb` | ❌ Not started |
 
-**Next task:** Build `ui/layer2_app.py` — Streamlit app for Layer 2 code risk.
+**Next task:** Deploy `ui/layer2_app.py` to Streamlit Cloud, then build `analysis/layer3_notes_recall.ipynb`.
 
 ---
 
@@ -278,16 +278,26 @@ Logic (flag_text, FLAG_COLORS, render_html) is inlined in the app — not import
 If the notebook logic changes, keep the app in sync manually until the `risk_highlight` package
 extraction is done (Phase 6 in FILE_STRUCTURE.md).
 
-### Layer 2 app (`ui/layer2_app.py`) — not started
+### Layer 2 app (`ui/layer2_app.py`) — done
+
+All Layer 2 logic inlined (same pattern as Layer 1 — no imports from notebook).
 
 ```
 Layout:
-- File upload widget (or path text input for local use)
-- Tabs: "Risk Flags" | "Decision Points"
-- Risk tab: annotated source view (reuse render_flags() from notebook)
-- Decision tab: checklist table (reuse render_decision_points() from notebook)
-- Sidebar: repo scan — file list with High flag counts
+- Sidebar: file uploader (.py / .R) + checkbox filters (High/Medium groups) + About
+- Main: summary badges (N High, N Medium, N Decision pts)
+- Tab 1 "Risk Flags": legend + summary table + annotated source view
+- Tab 2 "Decision Points": checklist table (line, category, code snippet, reviewer question)
+- Session state: cached by filename:hash(source) — re-runs only on file change
 ```
+
+**Tested against:**
+- `example_risky.py` → 37 flags (16 types), 9 decision points
+- `example_clean.py` → 0 High flags
+- `example_risky.R` → 30 flags (16 types)
+
+**Run locally:** `uv run streamlit run ui/layer2_app.py`
+**Deploy:** Add new app on Streamlit Cloud pointing at `ui/layer2_app.py` (same repo, no secrets needed)
 
 ---
 

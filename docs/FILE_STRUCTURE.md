@@ -33,7 +33,7 @@ risk-highlight-tool/
 │
 ├── ui/
 │   ├── layer1_app.py                  # ✅ Streamlit copy risk checker — deployed
-│   ├── layer2_app.py                  # Streamlit code risk checker — not started
+│   ├── layer2_app.py                  # ✅ Streamlit code risk checker — done
 │   └── layer3_app.py                  # ✅ Streamlit notes recall — deployed (OpenAI embeddings)
 │
 ├── evaluation/
@@ -113,7 +113,7 @@ Everything else is setup, rendering, or evaluation around those three functions.
 | 3 | `analysis/layer2_code_risk.ipynb` | ✅ Done — 29 tests passing, Python + R, repo scanner, decision points |
 | 4 | `ui/layer1_app.py` (Streamlit) | ✅ Done — deployed at risk-highlight-tool.streamlit.app |
 | 5 | `ui/layer3_app.py` (Streamlit, OpenAI embeddings) | ✅ Done — session-scoped, file upload, PDF/docx/txt/md |
-| 6 | `ui/layer2_app.py` (Streamlit) | **Next** |
+| 6 | `ui/layer2_app.py` (Streamlit) | ✅ Done — tested, ready to deploy |
 | 7 | `analysis/layer3_notes_recall.ipynb` | After Layer 2 UI |
 | 8 | `risk_highlight/layer1/` (extract from notebook) | After Streamlit demos validated |
 | 9 | `evaluation/gold/layer3_gold.jsonl` | After Layer 3 notebook |
