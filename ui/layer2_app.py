@@ -757,12 +757,36 @@ st.caption(
 
 # --- Sidebar ---
 with st.sidebar:
-    st.header("Upload a script")
-    uploaded = st.file_uploader(
-        "Drop a file here",
-        type=["py", "r", "R"],
+    st.header("Input")
+    input_mode = st.radio(
+        "Input mode",
+        ["Upload a file", "Paste code"],
         label_visibility="collapsed",
+        horizontal=True,
     )
+
+    uploaded = None
+    pasted_source = None
+    pasted_lang = None
+
+    if input_mode == "Upload a file":
+        uploaded = st.file_uploader(
+            "Drop a .py or .R file here",
+            type=["py", "r", "R"],
+            label_visibility="collapsed",
+        )
+    else:
+        pasted_lang = st.radio(
+            "Language",
+            ["Python", "R"],
+            horizontal=True,
+        )
+        pasted_source = st.text_area(
+            "Paste code here",
+            height=300,
+            placeholder="Paste your Python or R script here…",
+            label_visibility="collapsed",
+        )
 
     st.divider()
     st.header("Show / hide flag types")
@@ -787,66 +811,73 @@ with st.sidebar:
         "**Does not run the code.** Static analysis only.\n\n"
         "**Risk flags** — things that may be wrong (for the data team)\n\n"
         "**Decision points** — methodology choices needing editorial sign-off\n\n"
-        "**Supported:** `.py`, `.R`"
+        "**Supported:** `.py`, `.R`  —  upload a file or paste code directly."
     )
 
 # --- Main panel ---
-if uploaded is None:
-    st.info("Upload a .py or .R file in the sidebar to begin.")
-else:
-    # Run analysis (cache by filename + content hash)
-    source = uploaded.read().decode("utf-8", errors="replace")
+# Resolve source + filename from whichever input mode is active
+if input_mode == "Upload a file":
+    if uploaded is None:
+        st.info("Upload a .py or .R file in the sidebar to begin.")
+        st.stop()
+    source   = uploaded.read().decode("utf-8", errors="replace")
     filename = uploaded.name
+else:
+    if not pasted_source or not pasted_source.strip():
+        st.info("Paste code in the sidebar to begin.")
+        st.stop()
+    source   = pasted_source
+    filename = "pasted_code.py" if pasted_lang == "Python" else "pasted_code.R"
 
-    cache_key = f"{filename}:{hash(source)}"
-    if st.session_state.get("l2_cache_key") != cache_key:
-        with st.spinner(f"Analyzing {filename}…"):
-            flags = flag_code(source, filename)
-            dps   = find_decision_points(source)
-        st.session_state["l2_flags"]     = flags
-        st.session_state["l2_dps"]       = dps
-        st.session_state["l2_cache_key"] = cache_key
+cache_key = f"{filename}:{hash(source)}"
+if st.session_state.get("l2_cache_key") != cache_key:
+    with st.spinner(f"Analyzing {filename}…"):
+        flags = flag_code(source, filename)
+        dps   = find_decision_points(source)
+    st.session_state["l2_flags"]     = flags
+    st.session_state["l2_dps"]       = dps
+    st.session_state["l2_cache_key"] = cache_key
+else:
+    flags = st.session_state["l2_flags"]
+    dps   = st.session_state["l2_dps"]
+
+filtered = _filter_flags(flags)
+n_high   = sum(1 for f in filtered if f.priority == "High")
+n_med    = sum(1 for f in filtered if f.priority == "Medium")
+
+# Summary badges
+col_h, col_m, col_t, _ = st.columns([1, 1, 1, 5])
+with col_h:
+    st.markdown(
+        f"<div style='background:#ff6b6b;padding:6px 14px;border-radius:6px;"
+        f"text-align:center;color:#fff;font-weight:bold;font-size:1.1em;'>"
+        f"{n_high} High</div>", unsafe_allow_html=True
+    )
+with col_m:
+    st.markdown(
+        f"<div style='background:#ffd43b;padding:6px 14px;border-radius:6px;"
+        f"text-align:center;font-weight:bold;font-size:1.1em;'>"
+        f"{n_med} Medium</div>", unsafe_allow_html=True
+    )
+with col_t:
+    st.markdown(
+        f"<div style='background:#f1f3f5;padding:6px 14px;border-radius:6px;"
+        f"text-align:center;font-size:1.1em;'>"
+        f"{len(dps)} Decision pts</div>", unsafe_allow_html=True
+    )
+
+st.divider()
+
+tab_flags, tab_dps = st.tabs(["Risk Flags", "Decision Points"])
+
+with tab_flags:
+    if not filtered:
+        st.success("No flags match the current filter.")
     else:
-        flags = st.session_state["l2_flags"]
-        dps   = st.session_state["l2_dps"]
+        st.markdown(render_flags(filtered, source, filename), unsafe_allow_html=True)
 
-    filtered = _filter_flags(flags)
-    n_high   = sum(1 for f in filtered if f.priority == "High")
-    n_med    = sum(1 for f in filtered if f.priority == "Medium")
-
-    # Summary badges
-    col_h, col_m, col_t, _ = st.columns([1, 1, 1, 5])
-    with col_h:
-        st.markdown(
-            f"<div style='background:#ff6b6b;padding:6px 14px;border-radius:6px;"
-            f"text-align:center;color:#fff;font-weight:bold;font-size:1.1em;'>"
-            f"{n_high} High</div>", unsafe_allow_html=True
-        )
-    with col_m:
-        st.markdown(
-            f"<div style='background:#ffd43b;padding:6px 14px;border-radius:6px;"
-            f"text-align:center;font-weight:bold;font-size:1.1em;'>"
-            f"{n_med} Medium</div>", unsafe_allow_html=True
-        )
-    with col_t:
-        st.markdown(
-            f"<div style='background:#f1f3f5;padding:6px 14px;border-radius:6px;"
-            f"text-align:center;font-size:1.1em;'>"
-            f"{len(dps)} Decision pts</div>", unsafe_allow_html=True
-        )
-
-    st.divider()
-
-    tab_flags, tab_dps = st.tabs(["Risk Flags", "Decision Points"])
-
-    with tab_flags:
-        if not filtered:
-            st.success("No flags match the current filter.")
-        else:
-            st.markdown(render_flags(filtered, source, filename), unsafe_allow_html=True)
-
-    with tab_dps:
-        if not dps:
-            st.success("No decision points detected.")
-        else:
-            st.markdown(render_decision_points(dps, filename), unsafe_allow_html=True)
+with tab_dps:
+    if not dps:
+        st.success("No decision points detected.")
+    else:
+        st.markdown(render_decision_points(dps, filename), unsafe_allow_html=True)
