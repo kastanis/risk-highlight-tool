@@ -1,6 +1,6 @@
 # File Structure — Risk Highlight Tool
 
-*Target structure for the full three-layer system. ✅ = exists. Build incrementally.*
+*Target structure for the full three-layer system. ✅ = exists and working. Build incrementally.*
 
 ---
 
@@ -11,30 +11,30 @@ risk-highlight-tool/
 │   ├── layer1_copy_risk.ipynb         # ✅ Copy risk checker — 20 tests passing
 │   ├── layer2_code_risk.ipynb         # ✅ Code risk checker — 29 tests passing, Python + R
 │   ├── layer2_examples/               # ✅ Example scripts with known issues (risky + clean, Python + R)
-│   ├── layer3_notes_recall.ipynb      # Source/notes recall (RAG)
+│   │   ├── example_risky.py
+│   │   ├── example_clean.py
+│   │   └── example_risky.R
+│   ├── layer3_notes_recall.ipynb      # Notes recall notebook — not started
 │   └── archive/                       # Old or exploratory notebooks
 │
-├── risk_highlight/                    # Core Python package (extracted from notebooks)
+├── risk_highlight/                    # Core Python package (future — extracted from notebooks)
 │   ├── __init__.py
 │   ├── layer1/
-│   │   ├── __init__.py
 │   │   ├── flaggers.py                # flag_text(text) -> list[Flag]  ← main function
 │   │   ├── patterns.py                # All regex, lexicons, spaCy Matcher rules
 │   │   └── render.py                  # HTML highlight rendering
 │   ├── layer2/
-│   │   ├── __init__.py
 │   │   ├── flaggers.py                # flag_code(path) -> list[CodeFlag], find_decision_points()
 │   │   ├── patterns.py                # AST rules, R regex patterns, sentinel values
 │   │   └── scanner.py                 # scan_repo(path) -> dict[file, list[CodeFlag]]
 │   └── layer3/
-│       ├── __init__.py
-│       ├── indexer.py                 # Ingest docs → embed → store in ChromaDB
+│       ├── indexer.py                 # Ingest docs → embed → store
 │       └── retriever.py               # Query by claim text → return passages
 │
 ├── ui/
-│   ├── layer1_app.py                  # Streamlit app — copy risk checker (next)
-│   ├── layer2_app.py                  # Streamlit app — code risk checker (after L1 UI)
-│   └── layer3_app.py                  # Streamlit app — notes recall
+│   ├── layer1_app.py                  # ✅ Streamlit copy risk checker — deployed
+│   ├── layer2_app.py                  # Streamlit code risk checker — not started
+│   └── layer3_app.py                  # ✅ Streamlit notes recall — deployed (OpenAI embeddings)
 │
 ├── evaluation/
 │   ├── gold/
@@ -43,20 +43,30 @@ risk-highlight-tool/
 │   │   └── layer3_gold.jsonl          # claim → correct source passage pairs (planned)
 │   └── run_eval.py                    # ✅ Precision / recall / F1 per flag type
 │
-├── data/
-│   └── documentation/                 # Project docs (this folder)
-│       ├── PROPOSAL.md
-│       ├── FILE_STRUCTURE.md          # This file
-│       └── OPEN_QUESTIONS.md
+├── docs/                              # ✅ Project documentation (moved from data/documentation/)
+│   ├── HANDOFF.md                     # Claude Code handoff — read this first
+│   ├── PROPOSAL.md                    # Architecture overview + decisions made
+│   ├── FILE_STRUCTURE.md              # This file — target structure with build status
+│   ├── LAYER2_FLAGS.md                # Complete flag taxonomy + decision points
+│   ├── OPEN_QUESTIONS.md              # Outstanding decisions
+│   ├── EVALUATION_PLAN_L1.md          # Eval methodology and gold set format
+│   ├── AI_USE.md                      # Template: AI use log for data team
+│   ├── AUDIT_TEMPLATE.md              # Template: audit checklist
+│   └── VETTING_REQUEST.md             # Template: intake form for outside reporters
 │
-├── tests/
+├── data/                              # Local only — gitignored (test docs, exports)
+│   └── .gitignore                     # ignores everything except itself
+│
+├── scratch/                           # Throwaway experiments — gitignored
+│   └── .gitkeep
+│
+├── tests/                             # Formal test suite (future)
 │   ├── test_layer1.py
 │   ├── test_layer2.py
 │   └── test_layer3.py
 │
-├── main.py                            # Entry point (thin CLI wrapper, optional)
-├── pyproject.toml                     # Dependencies
-├── uv.lock
+├── pyproject.toml                     # ✅ Dependencies (uv-managed)
+├── uv.lock                            # ✅ Locked dep graph — always commit
 ├── .gitignore
 ├── .python-version
 └── README.md
@@ -99,9 +109,11 @@ Everything else is setup, rendering, or evaluation around those three functions.
 | Phase | Files | Status |
 |---|---|---|
 | 1 | `analysis/layer1_copy_risk.ipynb` | ✅ Done — 20 tests passing |
-| 2 | `evaluation/gold/layer1_gold.jsonl` + `run_eval.py` | ✅ Done — F1 0.79 overall |
+| 2 | `evaluation/gold/layer1_gold.jsonl` + `run_eval.py` | ✅ Done — F1 0.82 overall |
 | 3 | `analysis/layer2_code_risk.ipynb` | ✅ Done — 29 tests passing, Python + R, repo scanner, decision points |
-| 4 | `ui/layer1_app.py` (Streamlit) | Next |
-| 5 | `ui/layer2_app.py` (Streamlit) | After Layer 1 UI |
-| 6 | `risk_highlight/layer1/` (extract from notebook) | After Streamlit demo |
-| 7 | `analysis/layer3_notes_recall.ipynb` | After Layer 2 ships |
+| 4 | `ui/layer1_app.py` (Streamlit) | ✅ Done — deployed at risk-highlight-tool.streamlit.app |
+| 5 | `ui/layer3_app.py` (Streamlit, OpenAI embeddings) | ✅ Done — session-scoped, file upload, PDF/docx/txt/md |
+| 6 | `ui/layer2_app.py` (Streamlit) | **Next** |
+| 7 | `analysis/layer3_notes_recall.ipynb` | After Layer 2 UI |
+| 8 | `risk_highlight/layer1/` (extract from notebook) | After Streamlit demos validated |
+| 9 | `evaluation/gold/layer3_gold.jsonl` | After Layer 3 notebook |

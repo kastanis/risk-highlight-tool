@@ -30,5 +30,5 @@ dependencies = [
     # "google-api-python-client"     # Google Drive ingestion (future)
 
     # UI
-    "streamlit>=1.45.0",
+    "streamlit>=1.45.0,<1.46.0",
 ]

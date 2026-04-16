@@ -2,7 +2,7 @@
 
 *For Claude Code. Read this before touching any file.*
 
-**Last updated:** 2026-04-09
+**Last updated:** 2026-04-15
 **Repo:** `/Users/akastanis/Git_work/risk-highlight-tool`
 **Run environment:** `uv run` — always prefix Python commands with `uv run`
 
@@ -26,10 +26,12 @@ never decide truth, never rewrite anything.
 | Layer 1 | Evaluation | `evaluation/gold/layer1_gold.jsonl` + `evaluation/run_eval.py` | ✅ Done — 30 sentences labeled |
 | Layer 2 | Code risk checker | `analysis/layer2_code_risk.ipynb` | ✅ Done — 29 tests passing |
 | Layer 2 | Example scripts | `analysis/layer2_examples/` | ✅ Done |
-| Layer 3 | Notes recall (RAG) | `analysis/layer3_notes_recall.ipynb` | ❌ Not started |
-| UI | Streamlit apps | `ui/layer1_app.py`, `ui/layer2_app.py` | ❌ Not started |
+| Layer 3 | Notes recall (RAG) | `ui/layer3_app.py` | ✅ Done — deployed on Streamlit Cloud |
+| UI — Layer 1 | Streamlit copy risk checker | `ui/layer1_app.py` | ✅ Done — deployed at risk-highlight-tool.streamlit.app |
+| UI — Layer 2 | Streamlit code risk checker | `ui/layer2_app.py` | ❌ Not started |
+| Analysis — Layer 3 | Notes recall notebook | `analysis/layer3_notes_recall.ipynb` | ❌ Not started |
 
-**Next task:** Build `ui/layer1_app.py` — Streamlit app for Layer 1.
+**Next task:** Build `ui/layer2_app.py` — Streamlit app for Layer 2 code risk.
 
 ---
 
@@ -205,56 +207,78 @@ Tests run inline in the notebook. 29/29 passing at handoff.
 
 ---
 
-## Layer 3 — Notes Recall (not started)
+## Layer 3 — Notes Recall
 
-### What it will do
+### What it does
 
-Given a claim from Layer 1 output, retrieve the passage in reporter notes most likely
-to be the source. RAG over local documents — no external API calls.
+Upload reporter notes (PDF, .docx, .txt, .md), paste a claim, get back the most relevant
+passages. RAG over uploaded documents using OpenAI embeddings. Session-scoped: index lives
+in browser memory and is cleared when the tab closes.
 
-### Planned stack
+**Privacy note:** Text is sent to OpenAI for embedding only — not stored or used for training.
+For notes that must stay fully local, see the commented-out `sentence-transformers` + `chromadb`
+stack in `pyproject.toml`.
 
-```python
-# All local — no data leaves the machine (hard requirement: reporter notes are sensitive)
-sentence-transformers   # local embeddings
-chromadb                # local vector store
-pdfplumber              # PDF text extraction
-google-api-python-client  # Google Drive ingestion (optional)
-```
-
-### Core functions (to build)
+### Stack
 
 ```python
-index_documents(folder: Path) -> None   # embed and store in ChromaDB
-retrieve(query: str, top_k: int = 3) -> list[Passage]  # semantic search
+openai              # text-embedding-3-small — fast, cheap, no local download
+python-dotenv       # .env loading for local dev
+pdfplumber          # PDF text extraction (page-aware)
+python-docx         # .docx extraction
+streamlit           # UI + session state
 ```
 
-### Dependencies to uncomment in `pyproject.toml`
+### Core functions (`ui/layer3_app.py`)
 
-```toml
-"sentence-transformers"
-"chromadb"
-"pdfplumber"
+```python
+@dataclass
+class Chunk:
+    text: str
+    filename: str
+    page: int           # 0 = unknown (docx, txt)
+    embedding: list[float] = field(default_factory=list)
+
+embed_chunks(chunks: list[Chunk], client: OpenAI) -> list[Chunk]
+    # Batch embed in one API call (up to 2048 inputs)
+
+search(query_embedding, index, top_k=5) -> list[tuple[Chunk, float]]
+    # Cosine similarity, returns top_k sorted by score
 ```
+
+### Key constants
+
+```python
+EMBED_MODEL   = "text-embedding-3-small"
+CHUNK_SIZE    = 400   # characters
+CHUNK_OVERLAP = 80
+TOP_K         = 5
+```
+
+### Deployment
+
+- **Local:** `uv run streamlit run ui/layer3_app.py` — needs `OPENAI_API_KEY` in `.env`
+- **Streamlit Cloud:** add `OPENAI_API_KEY` to App → Settings → Secrets
+
+### Still to build
+
+- `analysis/layer3_notes_recall.ipynb` — exploration notebook with eval and iteration
+- `evaluation/gold/layer3_gold.jsonl` — claim → correct passage pairs for recall eval
+- Google Drive ingestion (deferred — see `pyproject.toml` comments)
 
 ---
 
-## Streamlit UI (not started)
+## Streamlit UI
 
-### Layer 1 app (`ui/layer1_app.py`) — build this next
+### Layer 1 app (`ui/layer1_app.py`) — done
 
-```
-Layout:
-- Left: text area for paste input
-- Right: colored inline highlight output (reuse render_html() from notebook)
-- Below: flag table — flag_type | priority | matched text | reason
-- Sidebar: flag type legend with color swatches
-```
+Deployed at: https://risk-highlight-tool.streamlit.app
 
-Key: `render_html()` already exists in the notebook — extract it and import.
-The Streamlit app should be a thin wrapper around `flag_text()`, not duplicate logic.
+Logic (flag_text, FLAG_COLORS, render_html) is inlined in the app — not imported from the notebook.
+If the notebook logic changes, keep the app in sync manually until the `risk_highlight` package
+extraction is done (Phase 6 in FILE_STRUCTURE.md).
 
-### Layer 2 app (`ui/layer2_app.py`) — after Layer 1 UI
+### Layer 2 app (`ui/layer2_app.py`) — not started
 
 ```
 Layout:
@@ -281,17 +305,24 @@ risk-highlight-tool/
 ├── evaluation/
 │   ├── gold/layer1_gold.jsonl       ✅ 30 labeled sentences
 │   └── run_eval.py                  ✅ Precision/recall/F1 per flag type
-├── data/documentation/
+├── ui/
+│   ├── layer1_app.py                ✅ Streamlit copy risk checker (deployed)
+│   └── layer3_app.py                ✅ Streamlit notes recall (OpenAI embeddings)
+├── docs/
+│   ├── HANDOFF.md                   This file
 │   ├── PROPOSAL.md                  Architecture overview
 │   ├── FILE_STRUCTURE.md            Target repo structure with build status
 │   ├── LAYER2_FLAGS.md              Complete flag taxonomy + decision points
 │   ├── OPEN_QUESTIONS.md            Outstanding decisions
 │   ├── EVALUATION_PLAN_L1.md        Eval methodology and gold set format
 │   ├── AI_USE.md                    Template: AI use log for data team
+│   ├── AUDIT_TEMPLATE.md            Template: audit checklist
 │   └── VETTING_REQUEST.md           Template: intake form for outside reporters
-├── ui/                              (empty — to build)
-├── pyproject.toml                   Dependencies
-└── HANDOFF.md                       This file
+├── data/                            (gitignored) — local test docs only
+├── scratch/                         (gitignored) — throwaway experiments
+├── pyproject.toml                   Dependencies (uv-managed)
+├── uv.lock                          Locked dep graph — commit this
+└── .gitignore
 ```
 
 ---
@@ -306,6 +337,12 @@ uv sync
 uv run python evaluation/run_eval.py
 uv run python evaluation/run_eval.py --verbose
 
+# Run Layer 1 Streamlit app
+uv run streamlit run ui/layer1_app.py
+
+# Run Layer 3 Streamlit app (needs OPENAI_API_KEY in .env)
+uv run streamlit run ui/layer3_app.py
+
 # Open notebooks
 uv run jupyter lab
 
@@ -314,10 +351,10 @@ uv run jupyter lab
 cd analysis && uv run jupyter nbconvert --to notebook --execute layer2_code_risk.ipynb
 ```
 
-spaCy model required for Layer 1:
-```bash
-uv run python -m spacy download en_core_web_sm
-```
+spaCy model is installed via `pyproject.toml` — `uv sync` handles it.
+If running manually: `uv run python -m spacy download en_core_web_sm`
+
+Layer 3 requires `OPENAI_API_KEY` in `.env` for local dev, or in Streamlit Cloud secrets for deployment.
 
 ---
 
@@ -328,8 +365,8 @@ uv run python -m spacy download en_core_web_sm
 - **Deduplication is per flag type only.** Two different flag types on the same span are both kept.
 - **No quote flag.** Removed — not specific enough to data journalism risk.
 - **All layers independent.** Each works standalone. Integration comes later.
-- **Open source only.** spaCy (MIT), textacy (Apache 2.0), stdlib — no proprietary APIs.
-- **Local only for Layer 3.** Reporter notes never leave the machine.
+- **Open source only for Layers 1 + 2.** spaCy (MIT), stdlib — no proprietary APIs in flagging logic.
+- **Layer 3 uses OpenAI embeddings for the deployed version.** Local-only stack (sentence-transformers + ChromaDB) is stubbed in `pyproject.toml` comments for teams with strict data policies. Text goes to OpenAI only for embedding, not storage or training.
 - **`_code_only()` in every window check.** Comments with flag keywords cause false negatives without this.
 
 ---

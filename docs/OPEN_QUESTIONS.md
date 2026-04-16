@@ -45,6 +45,29 @@ issues, or should we construct synthetic examples and label them?
 
 ---
 
+## Layer 3 — Notes Recall
+
+**Q7. Chunk size tuning**
+`CHUNK_SIZE = 400` characters was chosen without systematic testing. Shorter chunks (200–250)
+may improve precision for dense documents; longer chunks (600–800) may improve recall for
+narrative prose. Should be tuned against a labeled `layer3_gold.jsonl` set once that exists.
+
+**Q8. Top-K threshold**
+Results are returned for all top-5 regardless of score. A match score below ~0.35 is likely
+noise. Should there be a minimum score cutoff, or a UI warning when the best match is weak?
+
+**Q9. Local-only version for sensitive newsrooms**
+The deployed app sends text to OpenAI. For reporters with strict data policies (embargoed material,
+source protection), a fully local version using `sentence-transformers` + ChromaDB is stubbed in
+`pyproject.toml`. Activate when needed — local model download is ~80MB, first-run slow on CPU.
+
+**Q10. Multi-file deduplication**
+If the same passage appears verbatim in two uploaded documents, both will surface in results.
+Should duplicate passages be collapsed, or is showing both occurrences useful (e.g., same quote
+in interview notes and a PDF)?
+
+---
+
 ## Deferred (not blocking)
 
 **D1. Tier 3 LLM fallback (Layer 1)**
