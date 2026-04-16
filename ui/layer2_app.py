@@ -716,13 +716,21 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
                 f'{f.flag_type.replace("_"," ")}: {FLAG_DEFINITIONS.get(f.flag_type,"")}'
                 for f in line_flags
             )
-            annotation = " ".join(
-                f'<span title="{FLAG_DEFINITIONS.get(f.flag_type,"")}" '
-                f'style="background:{FLAG_COLORS.get(f.flag_type,"#eee")};'
-                f'padding:1px 5px;border-radius:3px;font-size:0.78em;white-space:nowrap;cursor:help;">'
-                f'{f.flag_type.replace("_"," ")}</span>'
-                for f in line_flags
-            )
+            annotation_parts = []
+            for f in line_flags:
+                fc = FLAG_COLORS.get(f.flag_type, "#eee")
+                defn = FLAG_DEFINITIONS.get(f.flag_type, "")
+                annotation_parts.append(
+                    f'<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:4px;">'
+                    f'<span style="flex-shrink:0;display:inline-block;width:10px;height:10px;'
+                    f'border-radius:2px;background:{fc};margin-top:3px;"></span>'
+                    f'<span style="font-size:0.78em;line-height:1.4;">'
+                    f'<strong style="color:#333;">{f.flag_type.replace("_"," ")}</strong>'
+                    f'<br><span style="color:#666;">{defn}</span>'
+                    f'</span>'
+                    f'</div>'
+                )
+            annotation = "".join(annotation_parts)
             code_rows += (
                 f'<tr style="background:{bg}44;">'
                 f'<td style="color:#888;padding:2px 8px;font-family:monospace;'
