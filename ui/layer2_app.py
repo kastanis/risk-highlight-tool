@@ -56,10 +56,8 @@ FLAG_COLORS = {
     "zip_as_numeric":              "#f03e3e",
     "encoding_not_set":            "#a9e34b",
     "excel_date_risk":             "#63e6be",
-    "no_value_range_check":        "#74c0fc",
     "no_category_check":           "#4dabf7",
     "total_row_risk":              "#ff6b6b",
-    "magic_number":                "#dee2e6",
     "sentinel_value_risk":         "#ff922b",
     "no_join_count_check":         "#f03e3e",
     "join_on_string":              "#ffa8a8",
@@ -67,12 +65,11 @@ FLAG_COLORS = {
     "hardcoded_threshold":         "#ffd43b",
     "percentage_without_base":     "#ff922b",
     "small_denominator_risk":      "#f03e3e",
-    "mean_without_median":         "#74c0fc",
     "no_null_before_aggregation":  "#ff6b6b",
-    "pct_change_without_base_note":"#a9e34b",
     "geocoding_unverified":        "#ff922b",
     "projection_not_set":          "#f03e3e",
     "hardcoded_geo_count":         "#ffd43b",
+    "hardcoded_path":              "#f783ac",
 }
 
 HIGH_FLAGS = {
@@ -80,6 +77,7 @@ HIGH_FLAGS = {
     "sentinel_value_risk", "no_join_count_check", "no_unmatched_check",
     "hardcoded_threshold", "no_null_before_aggregation", "geocoding_unverified",
     "projection_not_set", "percentage_without_base", "small_denominator_risk",
+    "hardcoded_geo_count",
 }
 
 PRIORITY_ORDER = {"High": 0, "Medium": 1}
@@ -91,10 +89,8 @@ FLAG_DEFINITIONS = {
     "zip_as_numeric":              "A ZIP code column was cast to a numeric type. Leading zeros will be silently dropped (e.g. 07030 → 7030).",
     "encoding_not_set":            "File read with no encoding argument. Non-ASCII characters (accented names, special symbols) may be corrupted on some platforms.",
     "excel_date_risk":             "read_excel() with no dtype= argument. Excel stores dates as serial numbers; pandas may silently misparse date columns.",
-    "no_value_range_check":        "An aggregation (mean/sum) was computed with no min/max range check nearby. Outliers or data errors may be invisible.",
     "no_category_check":           "A groupby was used with no value_counts/table/unique check on the grouping column. Unexpected category values (typos, nulls) may produce phantom groups.",
     "total_row_risk":              "A 'Total' row was detected in a filter or comparison. If not excluded before aggregation, totals will be double-counted.",
-    "magic_number":                "An unexplained numeric threshold appears in the code with no comment. Future readers (and editors) cannot verify why this value was chosen.",
     "sentinel_value_risk":         "A sentinel value (-99, -999, 9999) was filtered. Verify this represents missing data and not a legitimate value in the dataset.",
     "no_join_count_check":         "A merge/join was performed with no row count check before or after. You may not know if rows were unexpectedly gained or lost.",
     "join_on_string":              "A join key looks like a free-text string column. String joins are fragile — whitespace, case, or encoding differences will silently drop rows.",
@@ -102,12 +98,11 @@ FLAG_DEFINITIONS = {
     "hardcoded_threshold":         "A hardcoded significance threshold (p < 0.05) was found. This alpha choice should be documented and justified.",
     "percentage_without_base":     "A percentage was calculated but the denominator (base N) was not printed nearby. Readers cannot verify what the percentage is of.",
     "small_denominator_risk":      "A rate or percentage may have a small denominator. Percentages based on small counts are unstable and can be misleading.",
-    "mean_without_median":         "mean() was used with no median() nearby. If the distribution is skewed, the mean may be unrepresentative — always report both.",
     "no_null_before_aggregation":  "An aggregation was computed with no null handling (na.rm/dropna/fillna) nearby. NAs propagate silently through sum/mean in many languages.",
-    "pct_change_without_base_note":"pct_change() was used with no comment explaining the base period. Without documentation, the reference point is ambiguous.",
     "geocoding_unverified":        "A geocoding call was found with no match-rate check nearby. Unmatched addresses are silently dropped, which can bias geographic analysis.",
     "projection_not_set":          "A spatial join was performed with no CRS/projection check nearby. Mismatched projections produce wrong geometries with no error.",
     "hardcoded_geo_count":         "A hardcoded geographic count was found. If boundaries change (redistricting, annexation), this number will be silently wrong.",
+    "hardcoded_path":              "An absolute or user-specific file path was found. The script will not run on another machine or in a shared environment.",
 }
 
 CATEGORY_COLORS = {
@@ -122,6 +117,7 @@ CATEGORY_COLORS = {
     "time_period":        "#ffa8a8",
     "deduplication":      "#a9e34b",
     "smoothing_choice":   "#cc5de8",
+    "imputation":         "#ff6b9d",
 }
 
 
@@ -153,7 +149,6 @@ def _has_nearby_call(source_lines: list[str], lineno: int, methods: list[str],
 
 _SENTINEL_RE   = re.compile(r"!=\s*-(?:99+|999+)|!=\s*(?:9999|99999)\b")
 _ZIP_PATTERNS  = re.compile(r"\bzip(?:_?code)?s?\b", re.IGNORECASE)
-_PCT_CHANGE    = re.compile(r"\.pct_change\s*\(")
 
 
 class PythonFlagger(ast.NodeVisitor):
@@ -345,22 +340,6 @@ class PythonFlagger(ast.NodeVisitor):
                         reason="Percentage calculated — denominator not printed nearby",
                         language="python"))
 
-            if ".mean()" in c:
-                nearby = self.source_lines[max(0, i - 4): i + 4]
-                if not any(".median()" in l for l in nearby):
-                    self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                        flag_type="mean_without_median", priority="Medium",
-                        reason="mean() used — no median() nearby (check for outliers)",
-                        language="python"))
-
-            if re.search(r"\.(mean|sum)\(", c):
-                nearby = self.source_lines[max(0, i - 6): i + 6]
-                if not any(re.search(r"\.(min|max|describe)\(", l) for l in nearby):
-                    self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                        flag_type="no_value_range_check", priority="Medium",
-                        reason="Aggregation with no min/max range check nearby",
-                        language="python"))
-
             if ".groupby(" in c:
                 nearby = self.source_lines[max(0, i - 6): i + 6]
                 if not any("value_counts" in l for l in nearby):
@@ -369,22 +348,13 @@ class PythonFlagger(ast.NodeVisitor):
                         reason="groupby() with no value_counts() to verify categories",
                         language="python"))
 
-            if _PCT_CHANGE.search(c):
-                nearby = self.source_lines[max(0, i - 3): i + 3]
-                if not any("#" in l for l in nearby):
-                    self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                        flag_type="pct_change_without_base_note", priority="Medium",
-                        reason="pct_change() with no comment explaining base period",
-                        language="python"))
+            if re.search(r"""['"](/Users/|/home/|C:\\\\|~/|~\\\\)""", c):
+                self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
+                    flag_type="hardcoded_path", priority="Medium",
+                    reason="Absolute/user-specific path — script will not run on another machine",
+                    language="python"))
 
-            m = re.search(r"[><!]=?\s*(\d+\.\d+)\b", c)
-            if m:
-                val = float(m.group(1))
-                if val not in (0.0, 0.5, 1.0, 100.0, 0.05):
-                    self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                        flag_type="magic_number", priority="Medium",
-                        reason=f"Unexplained threshold {m.group(1)} — add a comment",
-                        language="python"))
+
 
 
 # ---------------------------------------------------------------------------
@@ -449,18 +419,6 @@ def flag_r(source: str) -> list[CodeFlag]:
             _flag(i, "total_row_risk", "High",
                   '"Total" row detected — verify exclusion from aggregation')
 
-        if re.search(r"\bmean\s*\(", line):
-            nearby = lines[max(0,i-4): i+4]
-            if not any(re.search(r"\bmedian\s*\(", l) for l in nearby):
-                _flag(i, "mean_without_median", "Medium",
-                      "mean() used — no median() nearby")
-
-        if re.search(r"\b(?:mean|sum)\s*\(", line):
-            nearby = lines[max(0,i-6): i+6]
-            if not any(re.search(r"\b(?:min|max|range|summary)\s*\(", l) for l in nearby):
-                _flag(i, "no_value_range_check", "Medium",
-                      "Aggregation with no min/max/range check nearby")
-
         if _R_GROUP_BY.search(line):
             nearby = lines[max(0,i-6): i+6]
             if not any(re.search(r"\b(?:table|unique|levels|value_counts)\s*\(", l)
@@ -484,18 +442,17 @@ def flag_r(source: str) -> list[CodeFlag]:
                       "Percentage with no denominator printed")
 
         if _R_AGG_FUNCS.search(line):
-            nearby = lines[max(0,i-6): i+6]
-            if not any(re.search(r"na\.rm|complete\.cases|is\.na|drop_na|na\.omit", l)
-                       for l in nearby):
-                _flag(i, "no_null_before_aggregation", "High",
-                      "Aggregation with no NA handling (na.rm / na.omit / drop_na)")
+            # Skip if na.rm is on the same line (e.g. sum(x, na.rm = TRUE))
+            if not re.search(r"na\.rm", line):
+                nearby = lines[max(0,i-6): i+6]
+                if not any(re.search(r"na\.rm|complete\.cases|is\.na|drop_na|na\.omit", l)
+                           for l in nearby):
+                    _flag(i, "no_null_before_aggregation", "High",
+                          "Aggregation with no NA handling (na.rm / na.omit / drop_na)")
 
-        m = re.search(r"[><!]=?\s*(\d+\.\d+)\b", line)
-        if m:
-            val = float(m.group(1))
-            if val not in (0.0, 0.5, 1.0, 100.0, 0.05) and "#" not in line:
-                _flag(i, "magic_number", "Medium",
-                      f"Unexplained threshold {m.group(1)} — add a comment")
+        if re.search(r"""['"](/Users/|/home/|C:\\\\|~/|~/)""", line):
+            _flag(i, "hardcoded_path", "Medium",
+                  "Absolute/user-specific path — script will not run on another machine")
 
     for lineno in load_lines:
         if not _r_has_nearby(lines, lineno, ["nrow", "dim", "str(", "length(",
@@ -621,6 +578,20 @@ def _q_deduplication(line: str) -> str:
             "Which duplicate was kept (first, last, or another)? "
             "How many records were removed, and why do duplicates exist?")
 
+def _q_imputation(line: str) -> str:
+    m = re.search(r"fillna\s*\(([^)]{1,40})\)|replace_na\s*\(([^)]{1,40})\)|fill_value\s*=\s*([^\s,)]{1,30})", line)
+    val = next((g for g in (m.group(1), m.group(2), m.group(3)) if g), None) if m else None
+    val_str = f"with {val.strip()}" if val else ""
+    return (f"Missing values imputed {val_str}. Why was this fill value chosen? "
+            "How many rows are affected? Does imputing change the direction of any finding?")
+
+def _q_r_stat_test(line: str) -> str:
+    m = re.search(r"\b(t\.test|wilcox\.test|chisq\.test|fisher\.test|lm|glm|cor\.test|aov|anova)\s*\(", line)
+    test = m.group(1) if m else "this test"
+    return (f"{test}() chosen. Were the assumptions checked (normality, independence, equal variance)? "
+            "Was this test selected before or after seeing the data? "
+            "Were alternative tests considered?")
+
 def _q_smoothing(line: str) -> str:
     m = re.search(r"k\s*=\s*(\d+)|n\s*=\s*(\d+)|window\s*=\s*(\d+)", line)
     k = next((g for g in (m.group(1), m.group(2), m.group(3)) if g), None) if m else None
@@ -632,7 +603,7 @@ def _q_smoothing(line: str) -> str:
 
 _DP_PATTERNS = [
     ("filter_threshold",
-     re.compile(r"(?:df|data|gdf)\[.*?[><!]=?\s*\d+(?:\.\d+)?\b"),
+     re.compile(r"(?:df|data|gdf)\[.*?[><!]=?\s*\d+(?:\.\d+)?\b|filter\s*\(.*?[><!]=?\s*\d+(?:\.\d+)?\b"),
      _q_filter_threshold),
     ("date_cutoff",
      re.compile(r"[><!]=?\s*['\"](?:19|20)\d{2}|as\.Date\s*\(['\"]|\.dt\.|pd\.to_datetime"),
@@ -644,8 +615,10 @@ _DP_PATTERNS = [
      re.compile(r"how=['\"](?:left|right|outer|inner)['\"]|(?:left|right|full|inner)_join\s*\("),
      _q_join_type),
     ("stat_test_choice",
-     re.compile(r"\b(?:ttest_ind|ttest_1samp|mannwhitneyu|chi2_contingency|anova|pearsonr|spearmanr)\s*\("),
-     _q_stat_test),
+     re.compile(r"\b(?:ttest_ind|ttest_1samp|mannwhitneyu|chi2_contingency|anova|pearsonr|spearmanr)\s*\("
+                r"|\b(?:t\.test|wilcox\.test|chisq\.test|fisher\.test|lm|glm|cor\.test|aov)\s*\("),
+     lambda line: _q_stat_test(line) if re.search(r"ttest|mannwhitney|chi2|pearsonr|spearmanr", line)
+                  else _q_r_stat_test(line)),
     ("exclusion_filter",
      re.compile(r"(?:df|data)\[(?:df|data)\[.*?\]\s*(?:!=|>|<|>=|<=|~)"),
      _q_exclusion_filter),
@@ -656,7 +629,7 @@ _DP_PATTERNS = [
      re.compile(r"/\s*(?:df|data|pop|total|n)\b|/\s*sum\s*\("),
      _q_rate_denominator),
     ("time_period",
-     re.compile(r"year\s*==\s*\d{4}|(?:19|20)\d{2}|\.dt\.year"),
+     re.compile(r"year\s*==\s*\d{4}|[><!]=?\s*['\"]?(?:19|20)\d{2}['\"]?|\.dt\.year|<\s*(?:19|20)\d{2}\b"),
      _q_time_period),
     ("deduplication",
      re.compile(r"\.drop_duplicates\(|\.duplicated\(|drop_duplicates\("),
@@ -664,6 +637,9 @@ _DP_PATTERNS = [
     ("smoothing_choice",
      re.compile(r"rollmean\s*\(|rollmedian\s*\(|rolling\s*\(\s*window|\.rolling\("),
      _q_smoothing),
+    ("imputation",
+     re.compile(r"\.fillna\s*\(|replace_na\s*\(|\.interpolate\s*\(|imputeTS|mice\s*\(|Amelia"),
+     _q_imputation),
 ]
 
 

@@ -180,17 +180,28 @@ Full taxonomy with AP checklist references: `data/documentation/LAYER2_FLAGS.md`
 
 High-priority: `no_shape_check`, `no_na_check`, `zip_as_numeric`, `total_row_risk`,
 `sentinel_value_risk`, `no_join_count_check`, `no_unmatched_check`, `hardcoded_threshold`,
-`no_null_before_aggregation`, `geocoding_unverified`, `projection_not_set`
+`no_null_before_aggregation`, `geocoding_unverified`, `projection_not_set`,
+`percentage_without_base`, `small_denominator_risk`, `hardcoded_geo_count`
 
 Medium-priority: `no_dtype_check`, `encoding_not_set`, `excel_date_risk`,
-`no_value_range_check`, `no_category_check`, `join_on_string`, `magic_number`,
-`mean_without_median`, `pct_change_without_base_note`, `hardcoded_geo_count`
+`no_category_check`, `join_on_string`, `hardcoded_path`
 
-### 10 decision point types
+**Removed flags (too noisy):** `mean_without_median`, `no_value_range_check`,
+`magic_number`, `pct_change_without_base_note`
+
+### 13 decision point types
 
 `filter_threshold`, `unit_of_analysis`, `join_type`, `stat_test_choice`,
 `exclusion_filter`, `date_cutoff`, `rate_denominator`, `time_period`,
-`deduplication`, `column_selection`
+`deduplication`, `column_selection`, `smoothing_choice`, `imputation`,
+(stat_test_choice covers both Python scipy and R t.test/lm/glm/chisq.test)
+
+### Known limitations
+
+**Polars support:** The flagging patterns were built for pandas (Python) and base R / tidyverse.
+Scripts using Polars will produce false positives — primarily `no_null_before_aggregation`
+firing on `.agg()` chains where Polars handles nulls differently. Polars support is deferred
+to a future pass. Document any Polars scripts as out-of-scope for Layer 2 until then.
 
 Full taxonomy: `data/documentation/LAYER2_FLAGS.md` § Decision points
 
@@ -389,3 +400,12 @@ Layer 3 requires `OPENAI_API_KEY` in `.env` for local dev, or in Streamlit Cloud
 - Q4: Decision point noise — 10–20 per script, is that useful for editors?
 - Q5: `.ipynb` support for Layer 2 — extract cells via `nbformat` first?
 - Q6: Layer 2 gold set — needed before claiming Layer 2 "works"
+
+## Future: Layer 4 — Editorial Judgment Tool
+
+Full scope document: `docs/LAYER4_SCOPE.md`
+
+One-line summary: Takes a story draft + analysis script, uses Claude to produce
+a 7-section editorial memo answering "does this analysis support what the story claims?"
+First layer to use an LLM in the core reasoning path. Stateless — one API call per review.
+Estimated build: 1–2 sessions once Layer 2 is deployed.
