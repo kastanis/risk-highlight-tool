@@ -38,8 +38,9 @@ class CodeFlag:
 
 @dataclass
 class DecisionPoint:
-    line: int
-    code: str
+    line: int           # first occurrence
+    lines: list[int]    # all occurrences
+    code: str           # code snippet from first occurrence
     category: str
     question: str
 
@@ -642,8 +643,9 @@ _DP_PATTERNS = [
 
 def find_decision_points(source: str) -> list[DecisionPoint]:
     lines = source.splitlines()
-    points: list[DecisionPoint] = []
-    seen: set[tuple[int, str]] = set()
+    # key: (category, question) -> DecisionPoint
+    grouped: dict[tuple[str, str], DecisionPoint] = {}
+    seen_line_cat: set[tuple[int, str]] = set()
 
     for i, line in enumerate(lines, start=1):
         stripped = line.strip()
@@ -652,15 +654,20 @@ def find_decision_points(source: str) -> list[DecisionPoint]:
         c = _code_only(line)
         for category, pattern, question_fn in _DP_PATTERNS:
             if pattern.search(c):
-                key = (i, category)
-                if key not in seen:
-                    seen.add(key)
-                    points.append(DecisionPoint(
-                        line=i, code=stripped[:120],
-                        category=category, question=question_fn(c),
-                    ))
+                if (i, category) in seen_line_cat:
+                    continue
+                seen_line_cat.add((i, category))
+                question = question_fn(c)
+                key = (category, question)
+                if key in grouped:
+                    grouped[key].lines.append(i)
+                else:
+                    grouped[key] = DecisionPoint(
+                        line=i, lines=[i], code=stripped[:120],
+                        category=category, question=question,
+                    )
 
-    return sorted(points, key=lambda p: p.line)
+    return sorted(grouped.values(), key=lambda p: p.line)
 
 
 # ---------------------------------------------------------------------------
@@ -763,10 +770,16 @@ def render_decision_points(points: list[DecisionPoint], filename: str) -> str:
     for p in points:
         color = CATEGORY_COLORS.get(p.category, "#eee")
         safe_code = p.code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        if len(p.lines) == 1:
+            lines_display = str(p.lines[0])
+        elif len(p.lines) <= 4:
+            lines_display = ", ".join(str(n) for n in p.lines)
+        else:
+            lines_display = ", ".join(str(n) for n in p.lines[:3]) + f" +{len(p.lines)-3} more"
         rows += (
             f'<tr>'
             f'<td style="padding:6px 8px;color:#888;font-family:monospace;'
-            f'text-align:right;vertical-align:top;">{p.line}</td>'
+            f'text-align:right;vertical-align:top;white-space:nowrap;">{lines_display}</td>'
             f'<td style="padding:6px 8px;vertical-align:top;white-space:nowrap;">'
             f'<span style="background:{color};padding:2px 7px;border-radius:3px;'
             f'font-size:0.82em;">{p.category.replace("_"," ")}</span></td>'
