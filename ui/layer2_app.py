@@ -956,16 +956,16 @@ with col_t:
 
 st.divider()
 
-tab_flags, tab_dps = st.tabs(["Risk Flags", "Decision Points"])
-
-with tab_flags:
-    if not filtered:
-        st.success("No flags match the current filter.")
-    else:
-        st.markdown(render_flags(filtered, source, filename), unsafe_allow_html=True)
+tab_dps, tab_flags = st.tabs(["Decision Points", "Risk Flags"])
 
 with tab_dps:
     if not dps:
         st.success("No decision points detected.")
     else:
         st.markdown(render_decision_points(dps, filename), unsafe_allow_html=True)
+
+with tab_flags:
+    if not filtered:
+        st.success("No flags match the current filter.")
+    else:
+        st.markdown(render_flags(filtered, source, filename), unsafe_allow_html=True)
