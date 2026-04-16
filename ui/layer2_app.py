@@ -84,6 +84,32 @@ HIGH_FLAGS = {
 
 PRIORITY_ORDER = {"High": 0, "Medium": 1}
 
+FLAG_DEFINITIONS = {
+    "no_shape_check":              "Data was loaded but no row count check (len/shape/nrow/skim) was found nearby. You may not know if the file loaded completely.",
+    "no_na_check":                 "Data was loaded but no missing-value check (isna/dropna/is.na/skim) was found nearby. Silent NAs can corrupt aggregations.",
+    "no_dtype_check":              "Data was loaded but no dtype inspection (dtypes/str/glimpse/skim) was found nearby. Columns may have parsed as the wrong type.",
+    "zip_as_numeric":              "A ZIP code column was cast to a numeric type. Leading zeros will be silently dropped (e.g. 07030 → 7030).",
+    "encoding_not_set":            "File read with no encoding argument. Non-ASCII characters (accented names, special symbols) may be corrupted on some platforms.",
+    "excel_date_risk":             "read_excel() with no dtype= argument. Excel stores dates as serial numbers; pandas may silently misparse date columns.",
+    "no_value_range_check":        "An aggregation (mean/sum) was computed with no min/max range check nearby. Outliers or data errors may be invisible.",
+    "no_category_check":           "A groupby was used with no value_counts/table/unique check on the grouping column. Unexpected category values (typos, nulls) may produce phantom groups.",
+    "total_row_risk":              "A 'Total' row was detected in a filter or comparison. If not excluded before aggregation, totals will be double-counted.",
+    "magic_number":                "An unexplained numeric threshold appears in the code with no comment. Future readers (and editors) cannot verify why this value was chosen.",
+    "sentinel_value_risk":         "A sentinel value (-99, -999, 9999) was filtered. Verify this represents missing data and not a legitimate value in the dataset.",
+    "no_join_count_check":         "A merge/join was performed with no row count check before or after. You may not know if rows were unexpectedly gained or lost.",
+    "join_on_string":              "A join key looks like a free-text string column. String joins are fragile — whitespace, case, or encoding differences will silently drop rows.",
+    "no_unmatched_check":          "A left/right/outer join was performed with no check for unmatched rows. Rows that failed to match are silently excluded from the result.",
+    "hardcoded_threshold":         "A hardcoded significance threshold (p < 0.05) was found. This alpha choice should be documented and justified.",
+    "percentage_without_base":     "A percentage was calculated but the denominator (base N) was not printed nearby. Readers cannot verify what the percentage is of.",
+    "small_denominator_risk":      "A rate or percentage may have a small denominator. Percentages based on small counts are unstable and can be misleading.",
+    "mean_without_median":         "mean() was used with no median() nearby. If the distribution is skewed, the mean may be unrepresentative — always report both.",
+    "no_null_before_aggregation":  "An aggregation was computed with no null handling (na.rm/dropna/fillna) nearby. NAs propagate silently through sum/mean in many languages.",
+    "pct_change_without_base_note":"pct_change() was used with no comment explaining the base period. Without documentation, the reference point is ambiguous.",
+    "geocoding_unverified":        "A geocoding call was found with no match-rate check nearby. Unmatched addresses are silently dropped, which can bias geographic analysis.",
+    "projection_not_set":          "A spatial join was performed with no CRS/projection check nearby. Mismatched projections produce wrong geometries with no error.",
+    "hardcoded_geo_count":         "A hardcoded geographic count was found. If boundaries change (redistricting, annexation), this number will be silently wrong.",
+}
+
 CATEGORY_COLORS = {
     "filter_threshold":   "#ff922b",
     "date_cutoff":        "#ffd43b",
@@ -682,8 +708,8 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
 
     seen_types = sorted({f.flag_type for f in flags})
     legend_items = "".join(
-        f'<span style="background:{FLAG_COLORS.get(ft,"#eee")};'
-        f'padding:2px 8px;margin:2px;border-radius:3px;font-size:0.85em;">'
+        f'<span title="{FLAG_DEFINITIONS.get(ft,"")}" style="background:{FLAG_COLORS.get(ft,"#eee")};'
+        f'padding:2px 8px;margin:2px;border-radius:3px;font-size:0.85em;cursor:help;">'
         f'{ft.replace("_"," ")}</span>'
         for ft in seen_types
     )
@@ -693,12 +719,11 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
         ft_flags = [f for f in flags if f.flag_type == ft]
         color = FLAG_COLORS.get(ft, "#eee")
         lines_str = ", ".join(str(f.line) for f in ft_flags)
-        priority = ft_flags[0].priority
+        defn = FLAG_DEFINITIONS.get(ft, "")
         summary_rows += (
             f'<tr>'
             f'<td style="background:{color};padding:4px 8px;white-space:nowrap;">'
-            f'{ft.replace("_"," ")}</td>'
-            f'<td style="padding:4px 8px;">{priority}</td>'
+            f'<span title="{defn}" style="cursor:help;">{ft.replace("_"," ")}</span></td>'
             f'<td style="padding:4px 8px;">{len(ft_flags)}</td>'
             f'<td style="padding:4px 8px;font-family:monospace;color:#666;">{lines_str}</td>'
             f'</tr>'
@@ -712,8 +737,9 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
             primary = sorted(line_flags, key=lambda f: PRIORITY_ORDER.get(f.priority, 9))[0]
             bg = FLAG_COLORS.get(primary.flag_type, "#fff9c4")
             annotation = " ".join(
-                f'<span style="background:{FLAG_COLORS.get(f.flag_type,"#eee")};'
-                f'padding:1px 5px;border-radius:3px;font-size:0.78em;white-space:nowrap;">'
+                f'<span title="{FLAG_DEFINITIONS.get(f.flag_type,"")}" '
+                f'style="background:{FLAG_COLORS.get(f.flag_type,"#eee")};'
+                f'padding:1px 5px;border-radius:3px;font-size:0.78em;white-space:nowrap;cursor:help;">'
                 f'{f.flag_type.replace("_"," ")}: {f.reason}</span>'
                 for f in line_flags
             )
@@ -750,7 +776,6 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
       <table>
         <tr style="background:#f1f3f5;font-weight:bold;">
           <td style="padding:4px 8px;">Flag type</td>
-          <td style="padding:4px 8px;">Priority</td>
           <td style="padding:4px 8px;">Count</td>
           <td style="padding:4px 8px;">Lines</td>
         </tr>
