@@ -45,7 +45,7 @@ def get_client() -> OpenAI:
     key = None
     try:
         key = st.secrets["OPENAI_API_KEY"]
-    except (KeyError, FileNotFoundError):
+    except Exception:
         key = os.getenv("OPENAI_API_KEY")
     if not key:
         st.error("OPENAI_API_KEY not set. Add it in Streamlit Cloud → Settings → Secrets.")
@@ -188,7 +188,11 @@ st.caption(
     "Index lives in your browser session — nothing is stored after you close the tab."
 )
 
-client = get_client()
+try:
+    client = get_client()
+except Exception as e:
+    st.error(f"Failed to initialize OpenAI client: {e}")
+    st.stop()
 index = get_index()
 indexed_files = get_indexed_files()
 
