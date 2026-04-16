@@ -712,19 +712,24 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
         if line_flags:
             primary = sorted(line_flags, key=lambda f: PRIORITY_ORDER.get(f.priority, 9))[0]
             bg = FLAG_COLORS.get(primary.flag_type, "#fff9c4")
+            hover_title = " | ".join(
+                f'{f.flag_type.replace("_"," ")}: {FLAG_DEFINITIONS.get(f.flag_type,"")}'
+                for f in line_flags
+            )
             annotation = " ".join(
                 f'<span title="{FLAG_DEFINITIONS.get(f.flag_type,"")}" '
                 f'style="background:{FLAG_COLORS.get(f.flag_type,"#eee")};'
                 f'padding:1px 5px;border-radius:3px;font-size:0.78em;white-space:nowrap;cursor:help;">'
-                f'{f.flag_type.replace("_"," ")}: {f.reason}</span>'
+                f'{f.flag_type.replace("_"," ")}</span>'
                 for f in line_flags
             )
             code_rows += (
-                f'<tr style="background:{bg}33;">'
+                f'<tr style="background:{bg}44;">'
                 f'<td style="color:#888;padding:2px 8px;font-family:monospace;'
                 f'user-select:none;min-width:36px;text-align:right;vertical-align:top;">{i}</td>'
-                f'<td style="font-family:monospace;white-space:pre;padding:2px 12px;'
-                f'vertical-align:top;">{safe_line}</td>'
+                f'<td style="font-family:monospace;white-space:pre;padding:2px 4px 2px 8px;'
+                f'vertical-align:top;border-left:3px solid {bg};">'
+                f'<span title="{hover_title}" style="cursor:help;">{safe_line}</span></td>'
                 f'<td style="padding:2px 8px;vertical-align:top;">{annotation}</td>'
                 f'</tr>'
             )
