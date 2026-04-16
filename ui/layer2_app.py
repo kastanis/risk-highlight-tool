@@ -94,6 +94,7 @@ CATEGORY_COLORS = {
     "rate_denominator":   "#f03e3e",
     "time_period":        "#ffa8a8",
     "deduplication":      "#a9e34b",
+    "smoothing_choice":   "#cc5de8",
 }
 
 
@@ -470,16 +471,18 @@ def flag_r(source: str) -> list[CodeFlag]:
                       f"Unexplained threshold {m.group(1)} — add a comment")
 
     for lineno in load_lines:
-        if not _r_has_nearby(lines, lineno, ["nrow", "dim", "str(", "length("]):
+        if not _r_has_nearby(lines, lineno, ["nrow", "dim", "str(", "length(",
+                                              "skim(", "skim ", "glimpse(", "summary("]):
             _flag(lineno, "no_shape_check", "High",
-                  "Data loaded — no nrow()/dim() check nearby")
+                  "Data loaded — no nrow()/dim()/skim() check nearby")
         if not _r_has_nearby(lines, lineno, ["is.na", "complete.cases", "na.omit",
-                                              "drop_na", "summary("]):
+                                              "drop_na", "summary(", "skim(", "skim "]):
             _flag(lineno, "no_na_check", "High",
-                  "Data loaded — no is.na() / complete.cases() check nearby")
-        if not _r_has_nearby(lines, lineno, ["str(", "class(", "glimpse", "summary("]):
+                  "Data loaded — no is.na() / complete.cases() / skim() check nearby")
+        if not _r_has_nearby(lines, lineno, ["str(", "class(", "glimpse(", "glimpse ",
+                                              "summary(", "skim(", "skim "]):
             _flag(lineno, "no_dtype_check", "Medium",
-                  "Data loaded — no str()/class() dtype check nearby")
+                  "Data loaded — no str()/class()/glimpse()/skim() dtype check nearby")
 
     for lineno in merge_lines:
         if not _r_has_nearby(lines, lineno, ["nrow", "dim", "print"]):
@@ -524,44 +527,116 @@ def flag_code(source: str, filename: str) -> list[CodeFlag]:
 # Decision point detector
 # ---------------------------------------------------------------------------
 
+# Each entry: (category, compiled_pattern, question_fn)
+# question_fn receives the matched line and returns a context-aware question string.
+
+def _q_filter_threshold(line: str) -> str:
+    m = re.search(r"[><!]=?\s*(\d+(?:\.\d+)?)", line)
+    val = m.group(1) if m else "this value"
+    return (f"Filter threshold {val} used. What is the basis for this cutoff? "
+            "Is it from the data definition, a legal standard, or an analytic choice? "
+            "Was it chosen before or after seeing the distribution?")
+
+def _q_date_cutoff(line: str) -> str:
+    m = re.search(r"((?:19|20)\d{2}(?:-\d{2}(?:-\d{2})?)?)", line)
+    date = m.group(1) if m else "this date"
+    return (f"Date boundary {date} used. Why this cutoff? "
+            "Was it chosen before or after seeing the data? "
+            "How many rows does it drop, and is the final period complete?")
+
+def _q_unit_of_analysis(line: str) -> str:
+    # Python: .groupby("col") — R: group_by(col)
+    m = re.search(r"""groupby\s*\(\s*['"]?([\w_]+)['"]?\s*\)|group_by\s*\(\s*`?([\w_]+)`?\s*\)""", line)
+    col = m.group(1) or m.group(2) if m else None
+    if col:
+        return (f"'{col}' is the unit of analysis. Is this the right level of aggregation? "
+                "Were alternative groupings considered? Does this match the editorial claim?")
+    return ("This groupby key defines the unit of analysis. Was the right level of aggregation chosen? "
+            "Were alternative groupings considered?")
+
+def _q_join_type(line: str) -> str:
+    m = re.search(r"how=['\"](\w+)['\"]|(?:left|right|full|inner)_join", line)
+    jtype = m.group(1) if (m and m.group(1)) else (m.group(0).replace("_join","") if m else "this")
+    return (f"{jtype.capitalize()} join used. Who is excluded by this join type? "
+            "Was the row count checked before and after? "
+            "For outer joins: were unmatched rows investigated?")
+
+def _q_stat_test(line: str) -> str:
+    m = re.search(r"\b(ttest_ind|ttest_1samp|mannwhitneyu|chi2_contingency|anova|pearsonr|spearmanr)\b", line)
+    test = m.group(1) if m else "this test"
+    return (f"{test} chosen. Were the assumptions checked (normality, independence, equal variance)? "
+            "Was this test chosen before or after seeing the data? "
+            "Were alternative tests considered?")
+
+def _q_exclusion_filter(line: str) -> str:
+    return ("This filter removes rows from the analysis. "
+            "Are the excluded rows documented? What share of the data do they represent? "
+            "Does removing them change the story?")
+
+def _q_column_selection(line: str) -> str:
+    return ("These columns were selected for analysis. Were alternative columns or metrics considered? "
+            "Is this the right variable for the editorial question?")
+
+def _q_rate_denominator(line: str) -> str:
+    return ("Rate or percentage calculated. What population is this normalized against? "
+            "Is the denominator consistent across all comparisons in the story? "
+            "Is the final period complete (no partial month/year)?")
+
+def _q_time_period(line: str) -> str:
+    m = re.search(r"((?:19|20)\d{2}(?:-\d{2}(?:-\d{2})?)?)", line)
+    year = m.group(1) if m else "this year"
+    return (f"Year/period {year} referenced. Why this time boundary? "
+            "Were trend patterns checked before and after? "
+            "Is the final period in the data complete?")
+
+def _q_deduplication(line: str) -> str:
+    return ("Records were deduplicated. What was the deduplication key? "
+            "Which duplicate was kept (first, last, or another)? "
+            "How many records were removed, and why do duplicates exist?")
+
+def _q_smoothing(line: str) -> str:
+    m = re.search(r"k\s*=\s*(\d+)|n\s*=\s*(\d+)|window\s*=\s*(\d+)", line)
+    k = next((g for g in (m.group(1), m.group(2), m.group(3)) if g), None) if m else None
+    window = f"{k}-period" if k else "rolling"
+    return (f"{window} smoothing applied. Why this window size? "
+            "Was it matched to a published methodology? "
+            "How does the choice affect the apparent trend?")
+
+
 _DP_PATTERNS = [
     ("filter_threshold",
      re.compile(r"(?:df|data|gdf)\[.*?[><!]=?\s*\d+(?:\.\d+)?\b"),
-     "What is the basis for this filter threshold? Is it from the data definition, "
-     "a legal standard, or an analytic choice?"),
+     _q_filter_threshold),
     ("date_cutoff",
-     re.compile(r"[><!]=?\s*['\"](?:19|20)\d{2}|\.dt\.|pd\.to_datetime"),
-     "Why this date boundary? Was it chosen before or after seeing the data?"),
+     re.compile(r"[><!]=?\s*['\"](?:19|20)\d{2}|as\.Date\s*\(['\"]|\.dt\.|pd\.to_datetime"),
+     _q_date_cutoff),
     ("unit_of_analysis",
-     re.compile(r"\.groupby\(['\"][\w_]+['\"]"),
-     "This groupby key defines the unit of analysis. Was the right level of aggregation chosen?"),
+     re.compile(r"\.groupby\s*\(|group_by\s*\("),
+     _q_unit_of_analysis),
     ("join_type",
-     re.compile(r"how=['\"](?:left|right|outer|inner)['\"]"),
-     "Join type affects which records appear in the result. "
-     "Was the right join type chosen? Who is excluded by an inner join?"),
+     re.compile(r"how=['\"](?:left|right|outer|inner)['\"]|(?:left|right|full|inner)_join\s*\("),
+     _q_join_type),
     ("stat_test_choice",
      re.compile(r"\b(?:ttest_ind|ttest_1samp|mannwhitneyu|chi2_contingency|anova|pearsonr|spearmanr)\s*\("),
-     "Which statistical test was chosen and why? Were the assumptions (normality, independence) checked?"),
+     _q_stat_test),
     ("exclusion_filter",
      re.compile(r"(?:df|data)\[(?:df|data)\[.*?\]\s*(?:!=|>|<|>=|<=|~)"),
-     "This filter removes rows from the analysis. Are excluded rows documented? "
-     "What share of the data do they represent?"),
+     _q_exclusion_filter),
     ("column_selection",
      re.compile(r"\[\[[\w'\",\s]+\]\]"),
-     "These columns were selected for analysis. Were alternative columns considered? "
-     "Is this the right metric for the question?"),
+     _q_column_selection),
     ("rate_denominator",
-     re.compile(r"/\s*(?:df|data|pop|total|n)\b"),
-     "What population is this rate normalized against? Is the denominator consistent "
-     "across comparisons?"),
+     re.compile(r"/\s*(?:df|data|pop|total|n)\b|/\s*sum\s*\("),
+     _q_rate_denominator),
     ("time_period",
      re.compile(r"year\s*==\s*\d{4}|(?:19|20)\d{2}|\.dt\.year"),
-     "Which time period was chosen? Why this year or range? "
-     "Were trend patterns checked before and after?"),
+     _q_time_period),
     ("deduplication",
-     re.compile(r"\.drop_duplicates\(|\.duplicated\("),
-     "Records were deduplicated. What was the key? Which duplicate was kept? "
-     "How many records were removed?"),
+     re.compile(r"\.drop_duplicates\(|\.duplicated\(|drop_duplicates\("),
+     _q_deduplication),
+    ("smoothing_choice",
+     re.compile(r"rollmean\s*\(|rollmedian\s*\(|rolling\s*\(\s*window|\.rolling\("),
+     _q_smoothing),
 ]
 
 
@@ -575,14 +650,14 @@ def find_decision_points(source: str) -> list[DecisionPoint]:
         if not stripped or stripped.startswith("#"):
             continue
         c = _code_only(line)
-        for category, pattern, question in _DP_PATTERNS:
+        for category, pattern, question_fn in _DP_PATTERNS:
             if pattern.search(c):
                 key = (i, category)
                 if key not in seen:
                     seen.add(key)
                     points.append(DecisionPoint(
                         line=i, code=stripped[:120],
-                        category=category, question=question,
+                        category=category, question=question_fn(c),
                     ))
 
     return sorted(points, key=lambda p: p.line)
