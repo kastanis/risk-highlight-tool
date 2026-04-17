@@ -1,0 +1,71 @@
+# Layer 5 — Data Readiness Checker: contextual learning resources
+#
+# Each entry maps an issue_type to a list of resources shown as "Learn more" links
+# inside the contextual callouts in layer5_app.py.
+#
+# Fields:
+#   issue_type: must match a key used in CALLOUTS dict in layer5_app.py
+#   links:      list of {label, url} pairs — shown as markdown links
+#
+# To add or update a link: edit this file and git push.
+# No code change needed.
+#
+# === ISSUE TYPES ===
+# sentinel_values   — (X), *****, ±, suppression codes in government data
+# missing_values    — NaN / blank cells
+# duplicates        — duplicate rows
+# numeric_parsing   — % suffix, comma-formatted numbers, mixed types in numeric columns
+# llm_limits        — general LLM failure modes on tabular data (shown on every report)
+# census_data       — ACS/Census-specific guidance
+
+resources:
+
+  - issue_type: sentinel_values
+    links:
+      - label: "ACS: Understanding data suppression and (X) codes (Census Bureau)"
+        url: "https://www.census.gov/programs-surveys/acs/technical-documentation/user-notes.html"
+      - label: "BLS suppression codes reference (Bureau of Labor Statistics)"
+        url: "https://www.bls.gov/help/hlpforma.htm"
+      - label: "Verification Handbook: Working with government data (EJC)"
+        url: "https://datajournalism.com/read/handbook/verification-2"
+
+  - issue_type: missing_values
+    links:
+      - label: "IRE: Data cleaning tipsheets (IRE/NICAR)"
+        url: "https://www.ire.org/resources/"
+      - label: "Verification Handbook: Verifying data quality (EJC)"
+        url: "https://datajournalism.com/read/handbook/verification-2"
+
+  - issue_type: duplicates
+    links:
+      - label: "NICAR tipsheets: Cleaning and deduplicating records"
+        url: "https://www.ire.org/resources/"
+      - label: "ProPublica: Guide to bulletproofing your data"
+        url: "https://github.com/propublica/guides/blob/master/data-bulletproofing.md"
+
+  - issue_type: numeric_parsing
+    links:
+      - label: "ProPublica: Guide to bulletproofing your data"
+        url: "https://github.com/propublica/guides/blob/master/data-bulletproofing.md"
+      - label: "IRE: Cleaning data tipsheets"
+        url: "https://www.ire.org/resources/"
+
+  - issue_type: llm_limits
+    links:
+      - label: "TableBench: LLM performance on tabular data tasks (AAAI 2024)"
+        url: "https://arxiv.org/abs/2408.09174"
+      - label: "Perils of LLMs on survey/census data (Cambridge, 2024)"
+        url: "https://www.cambridge.org/core/journals/political-analysis/article/synthetic-replacements-for-human-survey-data-the-perils-of-large-language-models/"
+      - label: "How well do LLMs reason over tabular data, really? (2025)"
+        url: "https://arxiv.org/abs/2505.07453"
+      - label: "DS-1000: Data science code generation benchmark (ICML 2023)"
+        url: "https://proceedings.mlr.press/v202/lai23b/lai23b.pdf"
+
+  - issue_type: census_data
+    links:
+      - label: "ACS: Using the data (Census Bureau)"
+        url: "https://www.census.gov/programs-surveys/acs/guidance/which-data-tool.html"
+      - label: "Understanding ACS margins of error (Census Bureau)"
+        url: "https://www.census.gov/programs-surveys/acs/technical-documentation/user-notes/2018-01.html"
+      - label: "Perils of LLMs on survey/census data (Cambridge, 2024)"
+        url: "https://www.cambridge.org/core/journals/political-analysis/article/synthetic-replacements-for-human-survey-data-the-perils-of-large-language-models/"

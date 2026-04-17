@@ -30,8 +30,90 @@ never decide truth, never rewrite anything.
 | UI — Layer 1 | Streamlit copy risk checker | `ui/layer1_app.py` | ✅ Done — deployed at risk-highlight-tool.streamlit.app |
 | UI — Layer 2 | Streamlit code risk checker | `ui/layer2_app.py` | ✅ Done — tested against all 3 example scripts |
 | Analysis — Layer 3 | Notes recall notebook | `analysis/layer3_notes_recall.ipynb` | ❌ Not started |
+| UI — Layer 5 | Streamlit data readiness checker | `ui/layer5_app.py` | ✅ Done — deploy pending |
 
-**Next task:** Build `analysis/layer3_notes_recall.ipynb`, or build Layer 4 (`ui/layer4_app.py`) — see `docs/LAYER4_SCOPE.md`.
+**Next task:** Deploy Layer 5 to Streamlit Cloud, or build Layer 4 (`ui/layer4_app.py`) — see `docs/LAYER4_SCOPE.md`.
+
+---
+
+## Layer 5 — Data Readiness Checker
+
+### What it does
+
+Upload a CSV or Excel file and get a 7-section Data Readiness Report. Hybrid rule-based + LLM approach: pandas handles all stats; `gpt-4o-mini` writes narrative sections only. Raw data rows are never sent to the LLM — only computed stats and a 20-row sample.
+
+### Stack
+
+```python
+pandas              # profiling — missing %, duplicates, sentinel detection, mixed types
+tabulate            # df.to_markdown() for LLM prompt
+openai              # gpt-4o-mini for narrative sections only
+python-dotenv       # .env loading for local dev
+streamlit           # UI
+pyyaml              # loads data/resources/layer5_resources.yaml
+```
+
+### Architecture
+
+**Rule-based (pandas, no LLM):**
+- Section 1 — Overview table (column profiles: type, missing %, unique count, range, notes)
+- Section 4 — Readiness status badge (threshold logic, see `THRESHOLDS` dict)
+- Section 2 colored bullets — sentinels, missing values, mixed types, duplicates
+
+**LLM (gpt-4o-mini):**
+- Section 2 — semantic anomalies only (impossible values, format inconsistencies) — NOT re-stating pandas findings
+- Section 3 — outliers and anomalies in numeric distributions
+- Section 5 — recommendations
+- Section 6 — questions for the data provider
+- Section 7 — limitations
+
+### Readiness thresholds (auditable constants in `THRESHOLDS` dict)
+
+```python
+not_ready_missing_pct:   50.0   # any column >50% missing → Not Ready
+not_ready_duplicate_pct: 30.0   # >30% duplicate rows     → Not Ready
+caution_missing_pct:     20.0   # any column >20% missing → Use With Caution
+caution_duplicate_pct:   10.0   # >10% duplicate rows     → Use With Caution
+# sentinel values detected → always Use With Caution
+```
+
+### Detection logic
+
+**Sentinel/suppression values** (`_detect_sentinels`): scans object columns for ~20 known codes including ACS `(X)`, `*****`; BLS `S`, `D`, `W`, `Z`; SAS `.`; generic `N/A`, `null`, `-`, `—`; and `±` / `+/-` MOE prefix format.
+
+**Mixed data types** (`_detect_mixed_types`): fires on object columns where some values parse as numeric and others don't — only when BOTH types are present. Indicates a column that can't be used for math as-is.
+
+### Contextual callouts (collapsible expanders in Section 2)
+
+Each callout fires conditionally based on detected issues. All include a "What AI tools get wrong" paragraph grounded in peer-reviewed benchmarks.
+
+| Callout | Trigger | Color |
+|---|---|---|
+| Sentinel/suppression values | `has_sentinels` | orange |
+| Missing values | `has_missing` | yellow |
+| Mixed data types | `has_mixed_types` | orange |
+| Duplicate rows | `has_dupes` | yellow |
+| LLM limits (always shown) | always | blue |
+
+**Resource links** for each callout are stored in `data/resources/layer5_resources.yaml` — edit the YAML to update links without touching code.
+
+### Data journalism checklist
+
+Static expander at the bottom of every report. Plain-language guide covering: understanding what you have, talking to experts before analysis, checking numbers make sense, pre-publication steps, and AI use verification questions for editors.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `ui/layer5_app.py` | Main Streamlit app — all logic inlined |
+| `data/resources/layer5_resources.yaml` | Curated learning links per issue type |
+
+### Run locally
+
+```bash
+uv run streamlit run ui/layer5_app.py
+# Needs OPENAI_API_KEY in .env or Streamlit Cloud secrets
+```
 
 ---
 
@@ -302,6 +384,7 @@ Layout:
 Edit `data/patterns/layer1_patterns.yaml`, uncomment or add an entry, git push.
 Primary source: patterns noticed while editing. Secondary: arXiv cs.CL detection papers
 (read the "Qualitative Examples" / "Error Analysis" sections, not the math).
+When adding a pattern, also add a row to `docs/PATTERN_SOURCES.md` with the source citation.
 
 ### Layer 2 app (`ui/layer2_app.py`) — done, deployed
 
@@ -347,13 +430,15 @@ risk-highlight-tool/
 ├── ui/
 │   ├── layer1_app.py                ✅ Streamlit copy risk checker (deployed)
 │   ├── layer2_app.py                ✅ Streamlit code risk checker (deployed)
-│   └── layer3_app.py                ✅ Streamlit notes recall (OpenAI embeddings)
+│   ├── layer3_app.py                ✅ Streamlit notes recall (OpenAI embeddings)
+│   └── layer5_app.py                ✅ Streamlit data readiness checker (deploy pending)
 ├── docs/
 │   ├── HANDOFF.md                   This file
 │   ├── PROPOSAL.md                  Architecture overview
 │   ├── FILE_STRUCTURE.md            Target repo structure with build status
 │   ├── LAYER2_FLAGS.md              Complete flag taxonomy + decision points
 │   ├── LAYER4_SCOPE.md              Scope doc for Layer 4 editorial judgment tool (not yet built)
+│   ├── PATTERN_SOURCES.md           Source citations for all Layer 1 regex patterns
 │   ├── OPEN_QUESTIONS.md            Outstanding decisions
 │   ├── EVALUATION_PLAN_L1.md        Eval methodology and gold set format
 │   ├── AI_USE.md                    Template: AI use log for data team

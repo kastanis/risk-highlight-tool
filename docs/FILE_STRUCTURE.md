@@ -34,7 +34,8 @@ risk-highlight-tool/
 ├── ui/
 │   ├── layer1_app.py                  # ✅ Streamlit copy risk checker — deployed
 │   ├── layer2_app.py                  # ✅ Streamlit code risk checker — done
-│   └── layer3_app.py                  # ✅ Streamlit notes recall — deployed (OpenAI embeddings)
+│   ├── layer3_app.py                  # ✅ Streamlit notes recall — deployed (OpenAI embeddings)
+│   └── layer5_app.py                  # ✅ Streamlit data readiness checker — deploy pending
 │
 ├── evaluation/
 │   ├── gold/
@@ -55,7 +56,11 @@ risk-highlight-tool/
 │   └── VETTING_REQUEST.md             # Template: intake form for outside reporters
 │
 ├── data/                              # Local only — gitignored (test docs, exports)
-│   └── .gitignore                     # ignores everything except itself
+│   ├── .gitignore                     # ignores everything except patterns/ and resources/
+│   ├── patterns/
+│   │   └── layer1_patterns.yaml       # ✅ Custom pattern registry (edit to add new Layer 1 flags)
+│   └── resources/
+│       └── layer5_resources.yaml      # ✅ Curated learning links per issue type (edit to update links)
 │
 ├── scratch/                           # Throwaway experiments — gitignored
 │   └── .gitkeep
