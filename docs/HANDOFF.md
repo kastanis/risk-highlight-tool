@@ -2,7 +2,7 @@
 
 *For Claude Code. Read this before touching any file.*
 
-**Last updated:** 2026-04-16
+**Last updated:** 2026-04-17
 **Repo:** `/Users/akastanis/Git_work/risk-highlight-tool`
 **Run environment:** `uv run` — always prefix Python commands with `uv run`
 
@@ -31,7 +31,7 @@ never decide truth, never rewrite anything.
 | UI — Layer 2 | Streamlit code risk checker | `ui/layer2_app.py` | ✅ Done — tested against all 3 example scripts |
 | Analysis — Layer 3 | Notes recall notebook | `analysis/layer3_notes_recall.ipynb` | ❌ Not started |
 
-**Next task:** Deploy `ui/layer2_app.py` to Streamlit Cloud, then build `analysis/layer3_notes_recall.ipynb`.
+**Next task:** Build `analysis/layer3_notes_recall.ipynb`, or build Layer 4 (`ui/layer4_app.py`) — see `docs/LAYER4_SCOPE.md`.
 
 ---
 
@@ -289,16 +289,20 @@ Logic (flag_text, FLAG_COLORS, render_html) is inlined in the app — not import
 If the notebook logic changes, keep the app in sync manually until the `risk_highlight` package
 extraction is done (Phase 6 in FILE_STRUCTURE.md).
 
-### Layer 2 app (`ui/layer2_app.py`) — done
+### Layer 2 app (`ui/layer2_app.py`) — done, deployed
 
 All Layer 2 logic inlined (same pattern as Layer 1 — no imports from notebook).
 
 ```
 Layout:
-- Sidebar: file uploader (.py / .R) + checkbox filters (High/Medium groups) + About
+- Sidebar: file uploader (.py / .R) OR paste mode + checkbox filters (High/Medium groups) + About
 - Main: summary badges (N High, N Medium, N Decision pts)
-- Tab 1 "Risk Flags": legend + summary table + annotated source view
-- Tab 2 "Decision Points": checklist table (line, category, code snippet, reviewer question)
+- Tab 1 "Decision Points": checklist table (line, category, code snippet, reviewer question)
+- Tab 2 "Risk Flags":
+    - Summary table: flag type (colored) | priority badge | count | lines | definition
+    - Annotated source: columns are Flags | Line | Code
+      Flags column (left, fixed-width): color chip + bold flag name, one row per flag
+      Code column (right): monospace, colored left border, extends right
 - Session state: cached by filename:hash(source) — re-runs only on file change
 ```
 
@@ -328,12 +332,14 @@ risk-highlight-tool/
 │   └── run_eval.py                  ✅ Precision/recall/F1 per flag type
 ├── ui/
 │   ├── layer1_app.py                ✅ Streamlit copy risk checker (deployed)
+│   ├── layer2_app.py                ✅ Streamlit code risk checker (deployed)
 │   └── layer3_app.py                ✅ Streamlit notes recall (OpenAI embeddings)
 ├── docs/
 │   ├── HANDOFF.md                   This file
 │   ├── PROPOSAL.md                  Architecture overview
 │   ├── FILE_STRUCTURE.md            Target repo structure with build status
 │   ├── LAYER2_FLAGS.md              Complete flag taxonomy + decision points
+│   ├── LAYER4_SCOPE.md              Scope doc for Layer 4 editorial judgment tool (not yet built)
 │   ├── OPEN_QUESTIONS.md            Outstanding decisions
 │   ├── EVALUATION_PLAN_L1.md        Eval methodology and gold set format
 │   ├── AI_USE.md                    Template: AI use log for data team
