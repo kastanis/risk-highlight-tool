@@ -12,6 +12,7 @@ dependencies = [
     "jupytext>=1.19.1",
 
     # Layer 1 — copy risk (NLP)
+    "pyyaml>=6.0",        # pattern registry (data/patterns/layer1_patterns.yaml)
     "spacy>=3.8.14",      # NER, dependency parse, Matcher
     "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     # "textacy>=0.13.0",  # SVO extraction, direct quotations — floret fails on Py 3.13, defer to v2

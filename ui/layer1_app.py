@@ -11,6 +11,7 @@ Run:
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 import spacy
 import streamlit as st
@@ -42,6 +43,8 @@ FLAG_COLORS = {
 }
 
 PRIORITY_RANK = {"High": 0, "Medium": 1, "Low": 2}
+
+HIGH_FLAGS = {"quantitative_claim", "vague_attribution", "passive_attribution", "causal_claim"}
 
 REGEX_PATTERNS = [
     ("quantitative_claim", "High", "Hedged figure — does the reporter have the exact number?",
@@ -132,6 +135,20 @@ REGEX_PATTERNS = [
         | \bhistorically\b | \bfor\s+(?:decades?|years?|generations?)\b
      """, re.IGNORECASE)),
 ]
+
+def _load_yaml_patterns() -> list:
+    path = Path(__file__).parent.parent / "data" / "patterns" / "layer1_patterns.yaml"
+    if not path.exists():
+        return []
+    import yaml
+    data = yaml.safe_load(path.read_text()) or {}
+    out = []
+    for p in data.get("patterns", []):
+        out.append((p["flag_type"], p["priority"], p["reason"],
+                    re.compile(p["pattern"], re.IGNORECASE)))
+    return out
+
+REGEX_PATTERNS = REGEX_PATTERNS + _load_yaml_patterns()
 
 CAUSAL_CONNECTIVES = [
     "led to", "leads to", "lead to",
@@ -354,42 +371,61 @@ with col_output:
     else:
         st.info("Paste text in the input panel to begin.")
 
-# --- Legend ---
-st.divider()
-st.subheader("Flag types")
-
-legend_cols = st.columns(len(FLAG_COLORS))
-for col, (ftype, color) in zip(legend_cols, FLAG_COLORS.items()):
-    with col:
-        st.markdown(
-            f"<span style='background:{color};padding:3px 8px;border-radius:4px;"
-            f"font-size:12px;white-space:nowrap'>{ftype.replace('_', ' ')}</span>",
-            unsafe_allow_html=True,
-        )
-
-# --- Flag table ---
+# --- Summary badges + flag table ---
 if flags:
     filtered = _active_flags(flags)
+    n_high = sum(1 for f in filtered if f.priority == "High")
+    n_med  = sum(1 for f in filtered if f.priority == "Medium")
+
     st.divider()
-    st.subheader(f"Flags ({len(filtered)} shown, {len(flags)} total)")
+
+    col_h, col_m, col_t, _ = st.columns([1, 1, 1, 5])
+    with col_h:
+        st.markdown(
+            f"<div style='background:#ff6b6b;padding:6px 14px;border-radius:6px;"
+            f"text-align:center;color:#fff;font-weight:bold;font-size:1.1em;'>"
+            f"{n_high} High</div>", unsafe_allow_html=True)
+    with col_m:
+        st.markdown(
+            f"<div style='background:#ffd43b;padding:6px 14px;border-radius:6px;"
+            f"text-align:center;font-weight:bold;font-size:1.1em;'>"
+            f"{n_med} Medium</div>", unsafe_allow_html=True)
+    with col_t:
+        st.markdown(
+            f"<div style='background:#f1f3f5;padding:6px 14px;border-radius:6px;"
+            f"text-align:center;font-size:1.1em;'>"
+            f"{len(filtered)} Total</div>", unsafe_allow_html=True)
+
+    st.markdown("&nbsp;", unsafe_allow_html=True)
 
     if filtered:
-        header = "<tr style='background:#f0f0f0'>" + "".join(
-            f"<th style='padding:6px 10px;text-align:left;font-size:13px'>{h}</th>"
-            for h in ["Flag type", "Matched text", "Reason"]
-        ) + "</tr>"
-
+        header = (
+            "<tr style='background:#f1f3f5;font-weight:bold;'>"
+            + "".join(
+                f"<th style='padding:6px 10px;text-align:left;font-size:13px'>{h}</th>"
+                for h in ["Flag type", "Priority", "Matched text", "Reason"]
+            )
+            + "</tr>"
+        )
         body = ""
         for f in filtered:
             color = FLAG_COLORS.get(f.flag_type, "#eee")
-            badge = (
-                f"<span style='background:{color};padding:1px 7px;border-radius:3px;"
-                f"font-size:12px'>{f.flag_type.replace('_', ' ')}</span>"
+            priority_style = (
+                "background:#ff6b6b;color:#fff;" if f.priority == "High"
+                else "background:#ffd43b;color:#333;"
             )
             body += "<tr style='border-bottom:1px solid #eee'>"
-            body += f"<td style='padding:5px 10px'>{badge}</td>"
+            body += (
+                f"<td style='padding:5px 10px;background:{color};font-weight:bold;"
+                f"white-space:nowrap;font-size:12px'>{f.flag_type.replace('_', ' ')}</td>"
+            )
+            body += (
+                f"<td style='padding:5px 10px;white-space:nowrap;'>"
+                f"<span style='{priority_style}padding:1px 6px;border-radius:3px;"
+                f"font-size:11px;'>{f.priority}</span></td>"
+            )
             body += f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{f.text}</td>"
-            body += f"<td style='padding:5px 10px;font-size:12px;color:#555'>{f.reason}</td>"
+            body += f"<td style='padding:5px 10px;font-size:12px;color:#444'>{f.reason}</td>"
             body += "</tr>"
 
         st.markdown(
@@ -404,12 +440,16 @@ if flags:
 with st.sidebar:
     st.header("Show / hide flag types")
 
-    for ftype, color in FLAG_COLORS.items():
-        st.checkbox(
-            ftype.replace("_", " "),
-            value=True,
-            key=f"cb_{ftype}",
-        )
+    high_types = [ft for ft in FLAG_COLORS if ft in HIGH_FLAGS]
+    med_types  = [ft for ft in FLAG_COLORS if ft not in HIGH_FLAGS]
+
+    st.markdown("**High priority**")
+    for ft in sorted(high_types):
+        st.checkbox(ft.replace("_", " "), value=True, key=f"cb_{ft}")
+
+    st.markdown("**Medium priority**")
+    for ft in sorted(med_types):
+        st.checkbox(ft.replace("_", " "), value=True, key=f"cb_{ft}")
 
     st.divider()
     st.header("About")

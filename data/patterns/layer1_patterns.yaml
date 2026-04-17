@@ -1,0 +1,81 @@
+# Layer 1 custom pattern registry
+# Each entry adds a new regex pattern without code changes.
+# Appended to REGEX_PATTERNS at app startup.
+# Changes take effect on next Streamlit restart / redeployment.
+#
+# Fields:
+#   flag_type: must match a key in FLAG_COLORS (or will appear uncolored)
+#   priority:  "High" or "Medium"
+#   reason:    plain English, shown in the flag table
+#   pattern:   Python regex string — re.IGNORECASE applied automatically
+#
+# === HOW TO ADD A PATTERN ===
+# When you notice a new AI or journalism risk pattern while editing:
+#   1. Copy one of the examples below
+#   2. Fill in flag_type, priority, reason, pattern
+#   3. Move the entry above the "patterns: []" line (or replace [] with a list)
+#   4. git push → live on next Streamlit restart
+#
+# === SOURCES (in order of priority) ===
+# 1. Your editorial experience — primary source. If you see a phrase
+#    repeatedly in AI-assisted copy that raises a flag, add it here.
+#
+# 2. Academic research — useful for model-specific tells and false-positive
+#    tuning. Focus on the "Qualitative Examples" / "Error Analysis" sections:
+#    - arXiv cs.CL: search "LLM detection" or "AI-generated text detection"
+#    - Binoculars (Hans et al. 2024) arxiv.org/abs/2401.12070
+#    - RAID benchmark (2024) arxiv.org/abs/2405.07940
+#    - GPTZero research: gptzero.me/research
+
+patterns: []
+
+# ── Activate by moving entries above "patterns: []" ─────────────────────────
+
+# ── LLM filler phrases ───────────────────────────────────────────────────────
+# Not caught by any hardcoded flag. Phrases that appear in LLM output but
+# rarely in human journalism copy.
+#
+# - flag_type: passive_attribution
+#   priority: Medium
+#   reason: "LLM filler hedge — verify the claim is substantive, not AI padding"
+#   pattern: "it is (?:worth noting|important to note|notable that|worth mentioning)"
+#
+# - flag_type: passive_attribution
+#   priority: Medium
+#   reason: "LLM word — rarely used by human journalists; check if AI-generated"
+#   pattern: "\b(?:delve into|delves into|underscore[sd]?|multifaceted|nuanced approach)\b"
+
+# ── Vague quantification ──────────────────────────────────────────────────────
+# Not caught by hardcoded flags — vague_attribution requires a source verb;
+# pure vague quantities slip through.
+#
+# - flag_type: quantitative_claim
+#   priority: High
+#   reason: "Vague quantity — no number to verify. What is the actual figure?"
+#   pattern: "\b(?:a significant number|a large (?:proportion|share|number|amount)|many communities|numerous (?:cases|instances|reports)|a growing number|an increasing number)\b"
+
+# ── Overconfident language ────────────────────────────────────────────────────
+# Not caught by hardcoded flags — certainty_language only catches specific
+# verbs (shows/proves). These adverbs and constructions slip through.
+#
+# - flag_type: certainty_language
+#   priority: High
+#   reason: "Overconfident framing — does the evidence actually support this?"
+#   pattern: "\b(?:clearly|obviously|undoubtedly|without (?:a )?doubt|it is (?:clear|obvious|certain|undeniable) that|there is no question that|unquestionably)\b"
+
+# ── False balance ─────────────────────────────────────────────────────────────
+# Not caught by any hardcoded flag. "On one hand / on the other hand" used
+# to avoid taking a position on a factual matter.
+#
+# - flag_type: comparative_claim
+#   priority: Medium
+#   reason: "False balance framing — is this a genuine disagreement or a factual matter?"
+#   pattern: "on (?:the )?one hand.{0,120}on (?:the )?other hand"
+
+# ── Generic structural filler ─────────────────────────────────────────────────
+# Overly tidy connective structure common in LLM-generated prose.
+#
+# - flag_type: passive_attribution
+#   priority: Medium
+#   reason: "Structural filler common in AI-generated copy — verify this sentence adds reporting"
+#   pattern: "\b(?:it is important to (?:note|remember|emphasize|understand)|this (?:highlights?|underscores?|demonstrates?) the (?:importance|need|fact))\b"

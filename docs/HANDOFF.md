@@ -281,13 +281,27 @@ TOP_K         = 5
 
 ## Streamlit UI
 
-### Layer 1 app (`ui/layer1_app.py`) — done
+### Layer 1 app (`ui/layer1_app.py`) — done, deployed
 
 Deployed at: https://risk-highlight-tool.streamlit.app
 
 Logic (flag_text, FLAG_COLORS, render_html) is inlined in the app — not imported from the notebook.
 If the notebook logic changes, keep the app in sync manually until the `risk_highlight` package
 extraction is done (Phase 6 in FILE_STRUCTURE.md).
+
+```
+Layout:
+- Left column: text input area + "Check" button
+- Right column: highlighted output
+- Below: summary badges (N High / N Medium / N Total) + flag table
+    Flag table: flag type (colored) | priority badge | matched text | reason
+- Sidebar: checkboxes grouped High first, then Medium
+```
+
+**Adding new patterns** — no code change needed:
+Edit `data/patterns/layer1_patterns.yaml`, uncomment or add an entry, git push.
+Primary source: patterns noticed while editing. Secondary: arXiv cs.CL detection papers
+(read the "Qualitative Examples" / "Error Analysis" sections, not the math).
 
 ### Layer 2 app (`ui/layer2_app.py`) — done, deployed
 
@@ -345,7 +359,9 @@ risk-highlight-tool/
 │   ├── AI_USE.md                    Template: AI use log for data team
 │   ├── AUDIT_TEMPLATE.md            Template: audit checklist
 │   └── VETTING_REQUEST.md           Template: intake form for outside reporters
-├── data/                            (gitignored) — local test docs only
+├── data/
+│   └── patterns/
+│       └── layer1_patterns.yaml     ✅ Custom pattern registry (edit to add new flags)
 ├── scratch/                         (gitignored) — throwaway experiments
 ├── pyproject.toml                   Dependencies (uv-managed)
 ├── uv.lock                          Locked dep graph — commit this

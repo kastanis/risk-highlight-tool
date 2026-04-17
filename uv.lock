@@ -2072,6 +2072,7 @@ dependencies = [
     { name = "pdfplumber" },
     { name = "python-docx" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "spacy" },
     { name = "streamlit" },
 ]
@@ -2087,6 +2088,7 @@ requires-dist = [
     { name = "pdfplumber", specifier = ">=0.11.0" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "spacy", specifier = ">=3.8.14" },
     { name = "streamlit", specifier = ">=1.45.0,<1.46.0" },
 ]
