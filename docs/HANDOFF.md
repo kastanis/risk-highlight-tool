@@ -238,7 +238,7 @@ class CodeFlag:
 ### Python detection: AST + regex hybrid
 
 **AST (`PythonFlagger(ast.NodeVisitor)`):**
-- `visit_Call` — catches: `read_csv`/`read_excel` (load checks), `merge`/`join` (join checks), aggregation functions, geocoding calls, spatial joins
+- `visit_Call` — catches: `read_csv`/`read_excel` (load checks), `merge`/`join` (join checks), aggregation functions, spatial joins (`sjoin`/`sjoin_nearest`)
 - `visit_Assign` — catches: `astype(int/float)` on ZIP columns (`zip_as_numeric`)
 - `visit_Compare` — catches: `== 0.05` comparator (`hardcoded_threshold`)
 - `run_post_checks()` — whole-file pass after AST walk: `_check_loads()`, `_check_merges()`, `_check_aggregations()`, `_check_regex_passes()`
@@ -256,19 +256,25 @@ producing false negatives.
 **R detection:** Line-by-line regex only (no R AST available from Python). Same flag types,
 same priorities. Window proximity checks via `_r_has_nearby()`.
 
-### 20 risk flag types
+### 15 active risk flag types
 
 Full taxonomy with AP checklist references: `data/documentation/LAYER2_FLAGS.md`
 
-High-priority: `no_shape_check`, `no_na_check`, `zip_as_numeric`, `total_row_risk`,
-`sentinel_value_risk`, `no_join_count_check`, `no_unmatched_check`, `hardcoded_threshold`,
-`no_null_before_aggregation`, `geocoding_unverified`, `projection_not_set`,
-`percentage_without_base`, `small_denominator_risk`, `hardcoded_geo_count`
+High-priority (8): `no_shape_check`, `no_na_check`, `zip_as_numeric`,
+`no_join_count_check`, `no_unmatched_check`, `hardcoded_threshold`,
+`no_null_before_aggregation`, `projection_not_set`
 
-Medium-priority: `no_dtype_check`, `encoding_not_set`, `excel_date_risk`,
-`no_category_check`, `join_on_string`, `hardcoded_path`
+Medium-priority (7): `no_dtype_check`, `encoding_not_set`, `excel_date_risk`,
+`no_category_check`, `join_on_string`, `hardcoded_path`, `percentage_without_base`
 
-**Removed flags (too noisy):** `mean_without_median`, `no_value_range_check`,
+**Commented out (too noisy or not implemented):**
+- `total_row_risk` — fires on legitimate filter rows
+- `sentinel_value_risk` — fires on legitimate numeric comparisons
+- `geocoding_unverified` — fires on unrelated functions containing "geocod"
+- `small_denominator_risk` — not implemented (no AST denominator size check)
+- `hardcoded_geo_count` — not implemented (no geographic boundary count detection)
+
+**Removed flags (earlier audit):** `mean_without_median`, `no_value_range_check`,
 `magic_number`, `pct_change_without_base_note`
 
 ### 13 decision point types
@@ -404,9 +410,9 @@ Layout:
 ```
 
 **Tested against:**
-- `example_risky.py` → 37 flags (16 types), 9 decision points
-- `example_clean.py` → 0 High flags
-- `example_risky.R` → 30 flags (16 types)
+- `example_risky.py` → 25 flags (11 types), 9 decision points
+- `example_clean.py` → 0 flags
+- `example_risky.R` → 20 flags (11 types)
 
 **Run locally:** `uv run streamlit run ui/layer2_app.py`
 **Deploy:** Add new app on Streamlit Cloud pointing at `ui/layer2_app.py` (same repo, no secrets needed)

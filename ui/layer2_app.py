@@ -57,27 +57,29 @@ FLAG_COLORS = {
     "encoding_not_set":            "#a9e34b",
     "excel_date_risk":             "#63e6be",
     "no_category_check":           "#4dabf7",
-    "total_row_risk":              "#ff6b6b",
-    "sentinel_value_risk":         "#ff922b",
+    # "total_row_risk":            "#ff6b6b",   # commented out — too noisy, fires on legitimate filter rows
+    # "sentinel_value_risk":       "#ff922b",   # commented out — too noisy, fires on legitimate comparisons
     "no_join_count_check":         "#f03e3e",
     "join_on_string":              "#ffa8a8",
     "no_unmatched_check":          "#ff6b6b",
     "hardcoded_threshold":         "#ffd43b",
-    "percentage_without_base":     "#ff922b",
-    "small_denominator_risk":      "#f03e3e",
+    "percentage_without_base":     "#ffd43b",
+    # "small_denominator_risk":    "#f03e3e",   # commented out — not implemented (no AST denominator check)
     "no_null_before_aggregation":  "#ff6b6b",
-    "geocoding_unverified":        "#ff922b",
+    # "geocoding_unverified":      "#ff922b",   # commented out — fires on unrelated functions containing "geocod"
     "projection_not_set":          "#f03e3e",
-    "hardcoded_geo_count":         "#ffd43b",
+    # "hardcoded_geo_count":       "#ffd43b",   # commented out — not implemented (no geographic count detection)
     "hardcoded_path":              "#f783ac",
 }
 
 HIGH_FLAGS = {
-    "no_shape_check", "no_na_check", "zip_as_numeric", "total_row_risk",
-    "sentinel_value_risk", "no_join_count_check", "no_unmatched_check",
-    "hardcoded_threshold", "no_null_before_aggregation", "geocoding_unverified",
-    "projection_not_set", "percentage_without_base", "small_denominator_risk",
-    "hardcoded_geo_count",
+    "no_shape_check", "no_na_check", "zip_as_numeric",
+    "no_join_count_check", "no_unmatched_check",
+    "hardcoded_threshold", "no_null_before_aggregation",
+    "projection_not_set",
+    # moved to Medium: percentage_without_base
+    # commented out: total_row_risk, sentinel_value_risk, small_denominator_risk,
+    #                geocoding_unverified, hardcoded_geo_count
 }
 
 PRIORITY_ORDER = {"High": 0, "Medium": 1}
@@ -205,11 +207,12 @@ class PythonFlagger(ast.NodeVisitor):
         if fn in ("sum", "mean", "count", "median", "std", "var"):
             self._agg_lines.append(node.lineno)
 
-        if "geocod" in (fn or ""):
-            if not _has_nearby_call(self.source_lines, node.lineno,
-                                    ["match_rate", "len(", "shape", "count"]):
-                self._flag(node, "geocoding_unverified", "High",
-                           "Geocoding call with no match-rate check nearby")
+        # geocoding_unverified — commented out (fires on unrelated functions containing "geocod")
+        # if "geocod" in (fn or ""):
+        #     if not _has_nearby_call(self.source_lines, node.lineno,
+        #                             ["match_rate", "len(", "shape", "count"]):
+        #         self._flag(node, "geocoding_unverified", "High",
+        #                    "Geocoding call with no match-rate check nearby")
 
         if fn in ("sjoin", "sjoin_nearest"):
             if not _has_nearby_call(self.source_lines, node.lineno,
@@ -320,23 +323,25 @@ class PythonFlagger(ast.NodeVisitor):
             if not s or s.startswith("#"):
                 continue
 
-            if re.search(r'["\'](?:total|Total)["\']', c) and re.search(r"!=|==", c):
-                self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                    flag_type="total_row_risk", priority="High",
-                    reason='"Total" row detected — verify exclusion from aggregation',
-                    language="python"))
+            # total_row_risk — commented out (too noisy, fires on legitimate filter rows)
+            # if re.search(r'["\'](?:total|Total)["\']', c) and re.search(r"!=|==", c):
+            #     self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
+            #         flag_type="total_row_risk", priority="High",
+            #         reason='"Total" row detected — verify exclusion from aggregation',
+            #         language="python"))
 
-            if _SENTINEL_RE.search(c):
-                self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                    flag_type="sentinel_value_risk", priority="High",
-                    reason="Sentinel value filter — verify this is not actual missing data",
-                    language="python"))
+            # sentinel_value_risk — commented out (too noisy, fires on legitimate comparisons)
+            # if _SENTINEL_RE.search(c):
+            #     self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
+            #         flag_type="sentinel_value_risk", priority="High",
+            #         reason="Sentinel value filter — verify this is not actual missing data",
+            #         language="python"))
 
             if re.search(r"[/\*]\s*100", c) and re.search(r"\bpct\b|percent|rate", c, re.IGNORECASE):
                 nearby = self.source_lines[max(0, i - 3): i + 3]
                 if not any(re.search(r"n=|n =", l) or "print" in l for l in nearby):
                     self.flags.append(CodeFlag(line=i, col=0, end_line=i, code=s,
-                        flag_type="percentage_without_base", priority="High",
+                        flag_type="percentage_without_base", priority="Medium",
                         reason="Percentage calculated — denominator not printed nearby",
                         language="python"))
 
@@ -415,9 +420,10 @@ def flag_r(source: str) -> list[CodeFlag]:
             _flag(i, "zip_as_numeric", "High",
                   "ZIP column cast to numeric — leading zeros will be lost")
 
-        if re.search(r'["\'][Tt]otal["\']', line) and re.search(r"!=|==", line):
-            _flag(i, "total_row_risk", "High",
-                  '"Total" row detected — verify exclusion from aggregation')
+        # total_row_risk — commented out (too noisy, fires on legitimate filter rows)
+        # if re.search(r'["\'][Tt]otal["\']', line) and re.search(r"!=|==", line):
+        #     _flag(i, "total_row_risk", "High",
+        #           '"Total" row detected — verify exclusion from aggregation')
 
         if _R_GROUP_BY.search(line):
             nearby = lines[max(0,i-6): i+6]
@@ -426,10 +432,11 @@ def flag_r(source: str) -> list[CodeFlag]:
                 _flag(i, "no_category_check", "Medium",
                       "group_by() with no table()/unique() check on categories")
 
-        m = re.search(r"!=\s*(-99+|-999+|9999)", line)
-        if m:
-            _flag(i, "sentinel_value_risk", "High",
-                  f"Sentinel value {m.group(1)} — verify it represents missing data")
+        # sentinel_value_risk — commented out (too noisy, fires on legitimate comparisons)
+        # m = re.search(r"!=\s*(-99+|-999+|9999)", line)
+        # if m:
+        #     _flag(i, "sentinel_value_risk", "High",
+        #           f"Sentinel value {m.group(1)} — verify it represents missing data")
 
         if re.search(r"p\.value\s*[<>]=?\s*0\.05|alpha\s*=\s*0\.05", line):
             _flag(i, "hardcoded_threshold", "High",
@@ -438,7 +445,7 @@ def flag_r(source: str) -> list[CodeFlag]:
         if re.search(r"[*/]\s*100", line) and re.search(r"pct|percent|rate", line, re.IGNORECASE):
             nearby = lines[max(0,i-3): i+3]
             if not any(re.search(r"n=|print|cat\(", l) for l in nearby):
-                _flag(i, "percentage_without_base", "High",
+                _flag(i, "percentage_without_base", "Medium",
                       "Percentage with no denominator printed")
 
         if _R_AGG_FUNCS.search(line):
