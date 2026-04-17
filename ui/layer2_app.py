@@ -683,12 +683,6 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
         flag_map.setdefault(f.line, []).append(f)
 
     seen_types = sorted({f.flag_type for f in flags})
-    legend_items = "".join(
-        f'<span title="{FLAG_DEFINITIONS.get(ft,"")}" style="background:{FLAG_COLORS.get(ft,"#eee")};'
-        f'padding:2px 8px;margin:2px;border-radius:3px;font-size:0.85em;cursor:help;">'
-        f'{ft.replace("_"," ")}</span>'
-        for ft in seen_types
-    )
 
     summary_rows = ""
     for ft in seen_types:
@@ -696,12 +690,21 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
         color = FLAG_COLORS.get(ft, "#eee")
         lines_str = ", ".join(str(f.line) for f in ft_flags)
         defn = FLAG_DEFINITIONS.get(ft, "")
+        priority = "High" if ft in HIGH_FLAGS else "Medium"
+        priority_style = (
+            "background:#ff6b6b;color:#fff;" if priority == "High"
+            else "background:#ffd43b;color:#333;"
+        )
         summary_rows += (
             f'<tr>'
-            f'<td style="background:{color};padding:4px 8px;white-space:nowrap;">'
-            f'<span title="{defn}" style="cursor:help;">{ft.replace("_"," ")}</span></td>'
+            f'<td style="background:{color};padding:4px 8px;white-space:nowrap;font-weight:bold;">'
+            f'{ft.replace("_"," ")}</td>'
+            f'<td style="padding:4px 8px;white-space:nowrap;">'
+            f'<span style="{priority_style}padding:1px 6px;border-radius:3px;font-size:0.8em;">'
+            f'{priority}</span></td>'
             f'<td style="padding:4px 8px;">{len(ft_flags)}</td>'
-            f'<td style="padding:4px 8px;font-family:monospace;color:#666;">{lines_str}</td>'
+            f'<td style="padding:4px 8px;font-family:monospace;color:#666;white-space:nowrap;">{lines_str}</td>'
+            f'<td style="padding:4px 8px;color:#444;font-size:0.88em;">{defn}</td>'
             f'</tr>'
         )
 
@@ -712,22 +715,15 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
         if line_flags:
             primary = sorted(line_flags, key=lambda f: PRIORITY_ORDER.get(f.priority, 9))[0]
             bg = FLAG_COLORS.get(primary.flag_type, "#fff9c4")
-            hover_title = " | ".join(
-                f'{f.flag_type.replace("_"," ")}: {FLAG_DEFINITIONS.get(f.flag_type,"")}'
-                for f in line_flags
-            )
             annotation_parts = []
             for f in line_flags:
                 fc = FLAG_COLORS.get(f.flag_type, "#eee")
-                defn = FLAG_DEFINITIONS.get(f.flag_type, "")
                 annotation_parts.append(
-                    f'<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:4px;">'
-                    f'<span style="flex-shrink:0;display:inline-block;width:10px;height:10px;'
-                    f'border-radius:2px;background:{fc};margin-top:3px;"></span>'
-                    f'<span style="font-size:0.78em;line-height:1.4;">'
-                    f'<strong style="color:#333;">{f.flag_type.replace("_"," ")}</strong>'
-                    f'<br><span style="color:#666;">{defn}</span>'
-                    f'</span>'
+                    f'<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;white-space:nowrap;">'
+                    f'<span style="flex-shrink:0;display:inline-block;width:9px;height:9px;'
+                    f'border-radius:2px;background:{fc};"></span>'
+                    f'<span style="font-size:0.78em;font-weight:bold;color:#333;">'
+                    f'{f.flag_type.replace("_"," ")}</span>'
                     f'</div>'
                 )
             annotation = "".join(annotation_parts)
@@ -737,7 +733,7 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
                 f'user-select:none;min-width:36px;text-align:right;vertical-align:top;">{i}</td>'
                 f'<td style="font-family:monospace;white-space:pre;padding:2px 4px 2px 8px;'
                 f'vertical-align:top;border-left:3px solid {bg};">'
-                f'<span title="{hover_title}" style="cursor:help;">{safe_line}</span></td>'
+                f'{safe_line}</td>'
                 f'<td style="padding:2px 8px;vertical-align:top;">{annotation}</td>'
                 f'</tr>'
             )
@@ -760,13 +756,14 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
       .l2-report tr:hover {{ filter: brightness(0.97); }}
     </style>
     <div class="l2-report">
-      <div style="margin-bottom:12px;">{legend_items}</div>
       <h3 style="font-size:1em;margin-bottom:6px;">Summary</h3>
       <table>
         <tr style="background:#f1f3f5;font-weight:bold;">
           <td style="padding:4px 8px;">Flag type</td>
+          <td style="padding:4px 8px;">Priority</td>
           <td style="padding:4px 8px;">Count</td>
           <td style="padding:4px 8px;">Lines</td>
+          <td style="padding:4px 8px;">Definition</td>
         </tr>
         {summary_rows}
       </table>
