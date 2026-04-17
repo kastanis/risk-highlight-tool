@@ -729,22 +729,22 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
             annotation = "".join(annotation_parts)
             code_rows += (
                 f'<tr style="background:{bg}44;">'
+                f'<td style="padding:2px 8px;vertical-align:top;min-width:120px;max-width:200px;">{annotation}</td>'
                 f'<td style="color:#888;padding:2px 8px;font-family:monospace;'
                 f'user-select:none;min-width:36px;text-align:right;vertical-align:top;">{i}</td>'
                 f'<td style="font-family:monospace;white-space:pre;padding:2px 4px 2px 8px;'
                 f'vertical-align:top;border-left:3px solid {bg};">'
                 f'{safe_line}</td>'
-                f'<td style="padding:2px 8px;vertical-align:top;">{annotation}</td>'
                 f'</tr>'
             )
         else:
             code_rows += (
                 f'<tr>'
+                f'<td></td>'
                 f'<td style="color:#ccc;padding:2px 8px;font-family:monospace;'
                 f'user-select:none;min-width:36px;text-align:right;">{i}</td>'
                 f'<td style="font-family:monospace;white-space:pre;color:#555;'
                 f'padding:2px 12px;">{safe_line}</td>'
-                f'<td></td>'
                 f'</tr>'
             )
 
@@ -768,7 +768,14 @@ def render_flags(flags: list[CodeFlag], source: str, filename: str) -> str:
         {summary_rows}
       </table>
       <h3 style="font-size:1em;margin-bottom:6px;">Annotated source — <code>{filename}</code></h3>
-      <table>{code_rows}</table>
+      <table>
+        <tr style="background:#f1f3f5;font-size:0.82em;color:#666;">
+          <td style="padding:2px 8px;">Flags</td>
+          <td style="padding:2px 8px;">Line</td>
+          <td style="padding:2px 8px;">Code</td>
+        </tr>
+        {code_rows}
+      </table>
     </div>
     """
 
