@@ -21,7 +21,8 @@ dependencies = [
     # Layer 3 — notes recall
     "openai>=1.0.0", # embeddings + optional completions
     "python-dotenv>=1.0.0", # load .env for local dev
-    "pymupdf>=1.24.0,<1.26.0", # PDF text extraction — pinned below 1.27 (Linux stability)
+    "pymupdf>=1.24.0,<1.26.0", # PDF text extraction — primary, lower memory
+    "pdfplumber>=0.11.0", # PDF fallback if pymupdf unavailable
     "python-docx>=1.1.0", # .docx extraction
     # "sentence-transformers>=3.0.0" # local embeddings (local-only version)
     # "chromadb>=0.5.0"              # local vector store (local-only version)

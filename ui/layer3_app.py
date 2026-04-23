@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
-import fitz  # pymupdf
 import streamlit as st
 
 # Load .env from repo root for local development
@@ -72,27 +71,50 @@ class Chunk:
 MAX_PDF_PAGES = 150   # hard cap — protects Cloud memory limit
 
 def extract_pdf(data: bytes, filename: str) -> list[tuple[str, int]]:
-    """Extract text page-by-page using pymupdf (fitz) — lower memory than pdfplumber."""
+    """Extract text page-by-page. Uses pymupdf if available, falls back to pdfplumber."""
     pages = []
     try:
-        import sys
-        print(f"[layer3] opening PDF '{filename}' ({len(data)/1e6:.1f} MB)", flush=True, file=sys.stderr)
-        with fitz.open(stream=data, filetype="pdf") as pdf:
-            total = len(pdf)
-            if total > MAX_PDF_PAGES:
-                st.warning(
-                    f"'{filename}' has {total} pages — indexing the first {MAX_PDF_PAGES} only. "
-                    "Split the file to index the rest."
-                )
-            for i, page in enumerate(pdf, start=1):
-                if i > MAX_PDF_PAGES:
-                    break
-                try:
-                    text = page.get_text() or ""
-                except Exception:
-                    text = ""
-                if text.strip():
-                    pages.append((text, i))
+        try:
+            import fitz
+            use_fitz = True
+        except ImportError:
+            import pdfplumber
+            use_fitz = False
+
+        if use_fitz:
+            with fitz.open(stream=data, filetype="pdf") as pdf:
+                total = len(pdf)
+                if total > MAX_PDF_PAGES:
+                    st.warning(
+                        f"'{filename}' has {total} pages — indexing the first {MAX_PDF_PAGES} only. "
+                        "Split the file to index the rest."
+                    )
+                for i, page in enumerate(pdf, start=1):
+                    if i > MAX_PDF_PAGES:
+                        break
+                    try:
+                        text = page.get_text() or ""
+                    except Exception:
+                        text = ""
+                    if text.strip():
+                        pages.append((text, i))
+        else:
+            with pdfplumber.open(io.BytesIO(data)) as pdf:
+                total = len(pdf.pages)
+                if total > MAX_PDF_PAGES:
+                    st.warning(
+                        f"'{filename}' has {total} pages — indexing the first {MAX_PDF_PAGES} only. "
+                        "Split the file to index the rest."
+                    )
+                for i, page in enumerate(pdf.pages, start=1):
+                    if i > MAX_PDF_PAGES:
+                        break
+                    try:
+                        text = page.extract_text() or ""
+                    except Exception:
+                        text = ""
+                    if text.strip():
+                        pages.append((text, i))
     except Exception as e:
         st.warning(f"Could not read PDF '{filename}': {e}. Try saving as a text file instead.")
     return pages
