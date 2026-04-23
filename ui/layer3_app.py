@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
-import pdfplumber
+import fitz  # pymupdf
 import streamlit as st
 
 # Load .env from repo root for local development
@@ -30,9 +30,9 @@ from openai import OpenAI
 # Constants
 # ---------------------------------------------------------------------------
 
-EMBED_MODEL = "text-embedding-3-small"   # cheap, fast, good enough
-CHUNK_SIZE  = 400    # characters
-CHUNK_OVERLAP = 80
+EMBED_MODEL   = "text-embedding-3-small"   # cheap, fast, good enough
+CHUNK_SIZE    = 800   # characters — larger chunks = fewer API calls, still fine for retrieval
+CHUNK_OVERLAP = 50
 TOP_K = 5
 
 
@@ -70,12 +70,13 @@ class Chunk:
 # ---------------------------------------------------------------------------
 
 def extract_pdf(data: bytes, filename: str) -> list[tuple[str, int]]:
+    """Extract text page-by-page using pymupdf (fitz) — lower memory than pdfplumber."""
     pages = []
     try:
-        with pdfplumber.open(io.BytesIO(data)) as pdf:
-            for i, page in enumerate(pdf.pages, start=1):
+        with fitz.open(stream=data, filetype="pdf") as pdf:
+            for i, page in enumerate(pdf, start=1):
                 try:
-                    text = page.extract_text() or ""
+                    text = page.get_text() or ""
                 except Exception:
                     text = ""
                 if text.strip():
@@ -227,28 +228,38 @@ with st.sidebar:
     if uploaded:
         new_files = [f for f in uploaded if f.name not in indexed_files]
         if new_files:
-            with st.spinner(f"Indexing {len(new_files)} file(s)…"):
-                try:
-                    new_chunks = []
-                    for f in new_files:
-                        pages = extract(f)
-                        for page_text, page_num in pages:
-                            for chunk_text_item in chunk_text(page_text):
-                                new_chunks.append(Chunk(
-                                    text=chunk_text_item,
-                                    filename=f.name,
-                                    page=page_num,
-                                ))
+            progress_label = st.empty()
+            progress_bar   = st.progress(0)
+            try:
+                new_chunks = []
+                for fi, f in enumerate(new_files):
+                    progress_label.caption(f"Extracting {f.name}…")
+                    pages = extract(f)
+                    for page_text, page_num in pages:
+                        for chunk_text_item in chunk_text(page_text):
+                            new_chunks.append(Chunk(
+                                text=chunk_text_item,
+                                filename=f.name,
+                                page=page_num,
+                            ))
+                    progress_bar.progress((fi + 1) / (len(new_files) + 1))
 
-                    if new_chunks:
-                        embed_chunks(new_chunks, client)
-                        index.extend(new_chunks)
-                        for f in new_files:
-                            indexed_files.add(f.name)
-                        st.session_state["index"] = index
-                        st.session_state["indexed_files"] = indexed_files
-                except Exception as e:
-                    st.error(f"Indexing failed: {e}")
+                if new_chunks:
+                    progress_label.caption(f"Embedding {len(new_chunks):,} passages…")
+                    embed_chunks(new_chunks, client)
+                    index.extend(new_chunks)
+                    for f in new_files:
+                        indexed_files.add(f.name)
+                    st.session_state["index"] = index
+                    st.session_state["indexed_files"] = indexed_files
+
+                progress_bar.progress(1.0)
+                progress_label.empty()
+                progress_bar.empty()
+            except Exception as e:
+                progress_label.empty()
+                progress_bar.empty()
+                st.error(f"Indexing failed: {e}")
 
     if index:
         st.success(f"{len(index):,} passages indexed")

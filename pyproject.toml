@@ -10,30 +10,25 @@ dependencies = [
     "ipython>=9.12.0",
     "jupyterlab>=4.5.6",
     "jupytext>=1.19.1",
-
     # Layer 1 — copy risk (NLP)
-    "pyyaml>=6.0",        # pattern registry (data/patterns/layer1_patterns.yaml)
-    "spacy>=3.8.14",      # NER, dependency parse, Matcher
+    "pyyaml>=6.0", # pattern registry (data/patterns/layer1_patterns.yaml)
+    "spacy>=3.8.14", # NER, dependency parse, Matcher
     "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     # "textacy>=0.13.0",  # SVO extraction, direct quotations — floret fails on Py 3.13, defer to v2
-
     # Layer 2 — code risk (added when Layer 2 is built)
     # "nbformat"          # stdlib-adjacent, parse .ipynb cells
     # "sqlfluff"          # SQL linting
-
     # Layer 3 — notes recall
-    "openai>=1.0.0",                 # embeddings + optional completions
-    "python-dotenv>=1.0.0",          # load .env for local dev
-    "pdfplumber>=0.11.0",            # PDF text extraction
-    "python-docx>=1.1.0",            # .docx extraction
+    "openai>=1.0.0", # embeddings + optional completions
+    "python-dotenv>=1.0.0", # load .env for local dev
+    "pymupdf>=1.24.0", # PDF text extraction (replaces pdfplumber — faster, lower memory)
+    "python-docx>=1.1.0", # .docx extraction
     # "sentence-transformers>=3.0.0" # local embeddings (local-only version)
     # "chromadb>=0.5.0"              # local vector store (local-only version)
     # "google-api-python-client"     # Google Drive ingestion (future)
-
     # Layer 5 — data readiness checker
-    "pandas>=2.0.0",                 # dataset profiling (also used by layer5_app.py)
-    "tabulate>=0.9.0",               # df.to_markdown() for LLM prompt
-
+    "pandas>=2.0.0", # dataset profiling (also used by layer5_app.py)
+    "tabulate>=0.9.0", # df.to_markdown() for LLM prompt
     # UI
     "streamlit>=1.45.0,<1.46.0",
 ]
