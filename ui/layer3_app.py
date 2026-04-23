@@ -75,6 +75,8 @@ def extract_pdf(data: bytes, filename: str) -> list[tuple[str, int]]:
     """Extract text page-by-page using pymupdf (fitz) — lower memory than pdfplumber."""
     pages = []
     try:
+        import sys
+        print(f"[layer3] opening PDF '{filename}' ({len(data)/1e6:.1f} MB)", flush=True, file=sys.stderr)
         with fitz.open(stream=data, filetype="pdf") as pdf:
             total = len(pdf)
             if total > MAX_PDF_PAGES:
