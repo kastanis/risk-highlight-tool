@@ -77,6 +77,7 @@ REGEX_PATTERNS = [
         | \baccording\s+to\s+(?:sources?|officials?|experts?|reports?)\b
         | \bmany\s+(?:believe|say|argue|think|feel)\b
         | \bsome\s+(?:believe|say|argue|think|suggest)\b
+        | \b(?:economists?|doctors?|lawyers?|professors?|historians?|sociologists?|psychologists?)\s+(?:say|says|said|argue|argues|argued|warn|warns|warned|suggest|suggests|suggested|claim|claims|claimed)\b
      """, re.IGNORECASE)),
 
     ("passive_attribution", "High", "Actor removed — who found/reported/estimated this?",
@@ -89,6 +90,8 @@ REGEX_PATTERNS = [
         | \bit\s+(?:appears?|seems?|looks?)\s+(?:that\s+)?(?:the\s+)?(?:data\s+)?(?:suggests?|shows?|indicates?)
         | \b(?:is|are|was|were)\s+(?:widely\s+)?(?:believed|reported|understood|considered|known)\s+to\b
         | \bhas\s+been\s+(?:widely\s+)?(?:reported|noted|documented|established|confirmed)\b
+        | \b(?:was|were|has\s+been)\s+found\s+to\b
+        | \b(?:is|was|were)\s+(?:widely\s+)?considered\s+(?:too|very|quite|an?\s+\w+|the\s+\w+)
      """, re.IGNORECASE)),
 
     ("trend_language", "Medium", "Directional language — what is the actual magnitude and baseline?",
@@ -145,10 +148,6 @@ CERTAINTY_VERBS = {
 }
 
 NER_RULES = {
-    "PERSON":   ("named_entity",       "Medium", "PERSON — verify name and any claims attributed to them"),
-    "ORG":      ("named_entity",       "Medium", "ORG — verify organization name and role"),
-    "GPE":      ("named_entity",       "Medium", "GPE — verify place name and context"),
-    "NORP":     ("named_entity",       "Medium", "NORP — verify group name and characterization"),
     "MONEY":    ("quantitative_claim", "High",   "Monetary amount — verify figure and source"),
     "CARDINAL": ("quantitative_claim", "High",   "Specific count — verify figure and source"),
     "PERCENT":  ("quantitative_claim", "High",   "Percentage — verify figure and source"),
