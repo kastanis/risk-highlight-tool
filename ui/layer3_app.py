@@ -71,18 +71,28 @@ class Chunk:
 
 def extract_pdf(data: bytes, filename: str) -> list[tuple[str, int]]:
     pages = []
-    with pdfplumber.open(io.BytesIO(data)) as pdf:
-        for i, page in enumerate(pdf.pages, start=1):
-            text = page.extract_text() or ""
-            if text.strip():
-                pages.append((text, i))
+    try:
+        with pdfplumber.open(io.BytesIO(data)) as pdf:
+            for i, page in enumerate(pdf.pages, start=1):
+                try:
+                    text = page.extract_text() or ""
+                except Exception:
+                    text = ""
+                if text.strip():
+                    pages.append((text, i))
+    except Exception as e:
+        st.warning(f"Could not read PDF '{filename}': {e}. Try saving as a text file instead.")
     return pages
 
 
 def extract_docx(data: bytes) -> list[tuple[str, int]]:
-    doc = Document(io.BytesIO(data))
-    paras = [p.text for p in doc.paragraphs if p.text.strip()]
-    return [(p, 0) for p in paras]
+    try:
+        doc = Document(io.BytesIO(data))
+        paras = [p.text for p in doc.paragraphs if p.text.strip()]
+        return [(p, 0) for p in paras]
+    except Exception as e:
+        st.warning(f"Could not read .docx file: {e}.")
+        return []
 
 
 def extract_txt(data: bytes) -> list[tuple[str, int]]:
@@ -124,11 +134,18 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
 # ---------------------------------------------------------------------------
 
 def embed_chunks(chunks: list[Chunk], client: OpenAI) -> list[Chunk]:
-    """Embed all chunks in one API call (batch up to 2048 inputs)."""
-    texts = [c.text for c in chunks]
-    response = client.embeddings.create(model=EMBED_MODEL, input=texts)
-    for chunk, item in zip(chunks, response.data):
-        chunk.embedding = item.embedding
+    """Embed all chunks in batches of 512 (API limit is 2048, staying conservative)."""
+    batch_size = 512
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i:i + batch_size]
+        texts = [c.text for c in batch]
+        try:
+            response = client.embeddings.create(model=EMBED_MODEL, input=texts)
+            for chunk, item in zip(batch, response.data):
+                chunk.embedding = item.embedding
+        except Exception as e:
+            st.error(f"Embedding error (batch {i//batch_size + 1}): {e}")
+            raise
     return chunks
 
 
@@ -211,24 +228,27 @@ with st.sidebar:
         new_files = [f for f in uploaded if f.name not in indexed_files]
         if new_files:
             with st.spinner(f"Indexing {len(new_files)} file(s)…"):
-                new_chunks = []
-                for f in new_files:
-                    pages = extract(f)
-                    for page_text, page_num in pages:
-                        for chunk_text_item in chunk_text(page_text):
-                            new_chunks.append(Chunk(
-                                text=chunk_text_item,
-                                filename=f.name,
-                                page=page_num,
-                            ))
-
-                if new_chunks:
-                    embed_chunks(new_chunks, client)
-                    index.extend(new_chunks)
+                try:
+                    new_chunks = []
                     for f in new_files:
-                        indexed_files.add(f.name)
-                    st.session_state["index"] = index
-                    st.session_state["indexed_files"] = indexed_files
+                        pages = extract(f)
+                        for page_text, page_num in pages:
+                            for chunk_text_item in chunk_text(page_text):
+                                new_chunks.append(Chunk(
+                                    text=chunk_text_item,
+                                    filename=f.name,
+                                    page=page_num,
+                                ))
+
+                    if new_chunks:
+                        embed_chunks(new_chunks, client)
+                        index.extend(new_chunks)
+                        for f in new_files:
+                            indexed_files.add(f.name)
+                        st.session_state["index"] = index
+                        st.session_state["indexed_files"] = indexed_files
+                except Exception as e:
+                    st.error(f"Indexing failed: {e}")
 
     if index:
         st.success(f"{len(index):,} passages indexed")
