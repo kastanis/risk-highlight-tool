@@ -350,9 +350,13 @@ flags = flag_text(text) if text.strip() else []
 
 
 def _active_flags(all_flags: list[Flag]) -> list[Flag]:
-    """Filter flags to only those with active sidebar checkboxes."""
+    """Filter flags by active sidebar checkboxes and priority filter badge."""
     active_types = [k for k in FLAG_COLORS if st.session_state.get(f"cb_{k}", True)]
-    return [f for f in all_flags if f.flag_type in active_types]
+    pf = st.session_state.get("priority_filter")
+    return [
+        f for f in all_flags
+        if f.flag_type in active_types and (pf is None or f.priority == pf)
+    ]
 
 
 # --- Output ---
@@ -374,27 +378,62 @@ with col_output:
 # --- Summary badges + flag table ---
 if flags:
     filtered = _active_flags(flags)
-    n_high = sum(1 for f in filtered if f.priority == "High")
-    n_med  = sum(1 for f in filtered if f.priority == "Medium")
+    # Counts always reflect the full type-filtered set, not the priority-filtered subset,
+    # so badges show real totals even when one priority is selected.
+    type_filtered = [
+        f for f in flags
+        if st.session_state.get(f"cb_{f.flag_type}", True)
+    ]
+    n_high = sum(1 for f in type_filtered if f.priority == "High")
+    n_med  = sum(1 for f in type_filtered if f.priority == "Medium")
 
     st.divider()
 
+    # Priority filter badges — styled buttons. Clicking filters the table and highlights
+    # to that priority level. Clicking the active badge again resets to show all.
+    pf = st.session_state.get("priority_filter")
+    active_high = pf == "High"
+    active_med  = pf == "Medium"
+
+    # CSS: style each button by its aria-label (set via the button label text).
+    # Active button gets an inset box-shadow to show selection state.
+    st.markdown("""
+    <style>
+    button[data-testid="baseButton-secondary"][aria-label$="High"] {
+        background:#ff6b6b !important; color:#fff !important;
+        border:none; font-weight:bold; font-size:1.05em;
+    }
+    button[data-testid="baseButton-secondary"][aria-label$="Medium"] {
+        background:#ffd43b !important; color:#333 !important;
+        border:none; font-weight:bold; font-size:1.05em;
+    }
+    button[data-testid="baseButton-secondary"][aria-label$="Total"] {
+        background:#f1f3f5 !important; color:#333 !important;
+        border:none; font-size:1.05em;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     col_h, col_m, col_t, _ = st.columns([1, 1, 1, 5])
     with col_h:
-        st.markdown(
-            f"<div style='background:#ff6b6b;padding:6px 14px;border-radius:6px;"
-            f"text-align:center;color:#fff;font-weight:bold;font-size:1.1em;'>"
-            f"{n_high} High</div>", unsafe_allow_html=True)
+        label = f"{'▶ ' if active_high else ''}{n_high} High"
+        if st.button(label, key="btn_high", use_container_width=True,
+                     help="Filter to High priority — click again to reset"):
+            st.session_state["priority_filter"] = None if active_high else "High"
+            st.rerun()
     with col_m:
-        st.markdown(
-            f"<div style='background:#ffd43b;padding:6px 14px;border-radius:6px;"
-            f"text-align:center;font-weight:bold;font-size:1.1em;'>"
-            f"{n_med} Medium</div>", unsafe_allow_html=True)
+        label = f"{'▶ ' if active_med else ''}{n_med} Medium"
+        if st.button(label, key="btn_med", use_container_width=True,
+                     help="Filter to Medium priority — click again to reset"):
+            st.session_state["priority_filter"] = None if active_med else "Medium"
+            st.rerun()
     with col_t:
-        st.markdown(
-            f"<div style='background:#f1f3f5;padding:6px 14px;border-radius:6px;"
-            f"text-align:center;font-size:1.1em;'>"
-            f"{len(filtered)} Total</div>", unsafe_allow_html=True)
+        total_visible = len(_active_flags(flags))
+        label = f"{'▶ ' if pf is None else ''}{total_visible} Total"
+        if st.button(label, key="btn_all", use_container_width=True,
+                     help="Show all priorities"):
+            st.session_state["priority_filter"] = None
+            st.rerun()
 
     st.markdown("&nbsp;", unsafe_allow_html=True)
 
