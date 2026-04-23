@@ -375,7 +375,6 @@ with col_output:
 
 # --- Summary badges + flag table ---
 if flags:
-    filtered = _active_flags(flags)
     # Counts always reflect the full type-filtered set, not the priority-filtered subset,
     # so badges show real totals even when one priority is selected.
     type_filtered = [
@@ -387,54 +386,38 @@ if flags:
 
     st.divider()
 
-    # Priority filter badges — styled buttons. Clicking filters the table and highlights
-    # to that priority level. Clicking the active badge again resets to show all.
-    pf = st.session_state.get("priority_filter")
-    active_high = pf == "High"
-    active_med  = pf == "Medium"
+    # Static count badges + radio filter. Badges always show full type-filtered
+    # totals regardless of which priority is active.
+    n_total = len(type_filtered)
+    col_badges, col_filter, _ = st.columns([3, 3, 4])
 
-    # CSS: style each button by its aria-label (set via the button label text).
-    # Active button gets an inset box-shadow to show selection state.
-    st.markdown("""
-    <style>
-    button[data-testid="baseButton-secondary"][aria-label$="High"] {
-        background:#ff6b6b !important; color:#fff !important;
-        border:none; font-weight:bold; font-size:1.05em;
-    }
-    button[data-testid="baseButton-secondary"][aria-label$="Medium"] {
-        background:#ffd43b !important; color:#333 !important;
-        border:none; font-weight:bold; font-size:1.05em;
-    }
-    button[data-testid="baseButton-secondary"][aria-label$="Total"] {
-        background:#f1f3f5 !important; color:#333 !important;
-        border:none; font-size:1.05em;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    with col_badges:
+        st.markdown(
+            f"<div style='display:flex;gap:8px;align-items:center;padding-top:6px'>"
+            f"<span style='background:#ff6b6b;color:#fff;padding:4px 12px;"
+            f"border-radius:6px;font-weight:bold;font-size:1em'>{n_high} High</span>"
+            f"<span style='background:#ffd43b;color:#333;padding:4px 12px;"
+            f"border-radius:6px;font-weight:bold;font-size:1em'>{n_med} Medium</span>"
+            f"<span style='background:#e9ecef;color:#333;padding:4px 12px;"
+            f"border-radius:6px;font-size:1em'>{n_total} Total</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
 
-    col_h, col_m, col_t, _ = st.columns([1, 1, 1, 5])
-    with col_h:
-        label = f"{'▶ ' if active_high else ''}{n_high} High"
-        if st.button(label, key="btn_high", use_container_width=True,
-                     help="Filter to High priority — click again to reset"):
-            st.session_state["priority_filter"] = None if active_high else "High"
-            st.rerun()
-    with col_m:
-        label = f"{'▶ ' if active_med else ''}{n_med} Medium"
-        if st.button(label, key="btn_med", use_container_width=True,
-                     help="Filter to Medium priority — click again to reset"):
-            st.session_state["priority_filter"] = None if active_med else "Medium"
-            st.rerun()
-    with col_t:
-        total_visible = len(_active_flags(flags))
-        label = f"{'▶ ' if pf is None else ''}{total_visible} Total"
-        if st.button(label, key="btn_all", use_container_width=True,
-                     help="Show all priorities"):
-            st.session_state["priority_filter"] = None
-            st.rerun()
+    with col_filter:
+        pf_choice = st.radio(
+            "Filter",
+            options=["All", "High", "Medium"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="priority_radio",
+        )
+        pf = None if pf_choice == "All" else pf_choice
+        st.session_state["priority_filter"] = pf
 
     st.markdown("&nbsp;", unsafe_allow_html=True)
 
+    filtered = _active_flags(flags)
     if filtered:
         header = (
             "<tr style='background:#f1f3f5;font-weight:bold;'>"
