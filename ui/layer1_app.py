@@ -346,6 +346,17 @@ with col_input:
 # default=True on first render, so filtering is safe before the sidebar block runs.
 flags = flag_text(text) if text.strip() else []
 
+# Priority filter — must be set before _active_flags() is first called,
+# so the radio is rendered here (before the output panel) rather than below.
+if flags:
+    _pf_choice = st.radio(
+        "Show priority:",
+        options=["All", "High", "Medium"],
+        horizontal=True,
+        key="priority_radio",
+    )
+    st.session_state["priority_filter"] = None if _pf_choice == "All" else _pf_choice
+
 
 def _active_flags(all_flags: list[Flag]) -> list[Flag]:
     """Filter flags by active sidebar checkboxes and priority filter badge."""
@@ -389,31 +400,17 @@ if flags:
     # Static count badges + radio filter. Badges always show full type-filtered
     # totals regardless of which priority is active.
     n_total = len(type_filtered)
-    col_badges, col_filter, _ = st.columns([3, 3, 4])
-
-    with col_badges:
-        st.markdown(
-            f"<div style='display:flex;gap:8px;align-items:center;padding-top:6px'>"
-            f"<span style='background:#ff6b6b;color:#fff;padding:4px 12px;"
-            f"border-radius:6px;font-weight:bold;font-size:1em'>{n_high} High</span>"
-            f"<span style='background:#ffd43b;color:#333;padding:4px 12px;"
-            f"border-radius:6px;font-weight:bold;font-size:1em'>{n_med} Medium</span>"
-            f"<span style='background:#e9ecef;color:#333;padding:4px 12px;"
-            f"border-radius:6px;font-size:1em'>{n_total} Total</span>"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-
-    with col_filter:
-        pf_choice = st.radio(
-            "Filter",
-            options=["All", "High", "Medium"],
-            horizontal=True,
-            label_visibility="collapsed",
-            key="priority_radio",
-        )
-        pf = None if pf_choice == "All" else pf_choice
-        st.session_state["priority_filter"] = pf
+    st.markdown(
+        f"<div style='display:flex;gap:8px;align-items:center;padding-bottom:4px'>"
+        f"<span style='background:#ff6b6b;color:#fff;padding:4px 12px;"
+        f"border-radius:6px;font-weight:bold;font-size:1em'>{n_high} High</span>"
+        f"<span style='background:#ffd43b;color:#333;padding:4px 12px;"
+        f"border-radius:6px;font-weight:bold;font-size:1em'>{n_med} Medium</span>"
+        f"<span style='background:#e9ecef;color:#333;padding:4px 12px;"
+        f"border-radius:6px;font-size:1em'>{n_total} Total</span>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
     st.markdown("&nbsp;", unsafe_allow_html=True)
 
