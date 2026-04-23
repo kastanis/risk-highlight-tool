@@ -69,12 +69,22 @@ class Chunk:
 # Text extraction
 # ---------------------------------------------------------------------------
 
+MAX_PDF_PAGES = 150   # hard cap — protects Cloud memory limit
+
 def extract_pdf(data: bytes, filename: str) -> list[tuple[str, int]]:
     """Extract text page-by-page using pymupdf (fitz) — lower memory than pdfplumber."""
     pages = []
     try:
         with fitz.open(stream=data, filetype="pdf") as pdf:
+            total = len(pdf)
+            if total > MAX_PDF_PAGES:
+                st.warning(
+                    f"'{filename}' has {total} pages — indexing the first {MAX_PDF_PAGES} only. "
+                    "Split the file to index the rest."
+                )
             for i, page in enumerate(pdf, start=1):
+                if i > MAX_PDF_PAGES:
+                    break
                 try:
                     text = page.get_text() or ""
                 except Exception:
@@ -100,8 +110,17 @@ def extract_txt(data: bytes) -> list[tuple[str, int]]:
     return [(data.decode("utf-8", errors="replace"), 0)]
 
 
+MAX_FILE_MB = 20
+
 def extract(uploaded_file) -> list[tuple[str, int]]:
     data = uploaded_file.read()
+    mb = len(data) / 1_048_576
+    if mb > MAX_FILE_MB:
+        st.warning(
+            f"'{uploaded_file.name}' is {mb:.1f} MB — limit is {MAX_FILE_MB} MB. "
+            "Split into smaller files or export as .txt."
+        )
+        return []
     suffix = uploaded_file.name.rsplit(".", 1)[-1].lower()
     if suffix == "pdf":
         return extract_pdf(data, uploaded_file.name)
