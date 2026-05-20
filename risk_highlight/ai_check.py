@@ -45,8 +45,10 @@ certainty verb that over-states evidence
 comparison without stated baseline
   temporal_claim       — "last year", "since 2010", "over the past decade", "historically" — \
 time reference to verify
-  agency_name          — federal agency name that may be misspelled, outdated, restructured, \
-or no longer exist in its cited form
+  agency_name          — any government agency name that is misspelled, uses the wrong word \
+(e.g. "Customs and Border Patrol" instead of "Customs and Border Protection"), is outdated, \
+has been restructured, eliminated, or renamed. Check all agency names carefully against their \
+correct official names.
 
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
