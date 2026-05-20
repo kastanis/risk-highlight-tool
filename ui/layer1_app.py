@@ -19,7 +19,7 @@ from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
 from risk_highlight.ai_check import run_ai_check  # noqa: E402
-from risk_highlight.fact_check import fact_check_claim, fact_check_comparative  # noqa: E402
+from risk_highlight.fact_check import fact_check_claim  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -284,39 +284,26 @@ if st.session_state.get("ai_enabled") and text.strip():
             st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
 
 # --- Fact checker ---
-_VAGUE_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "half"}
-quant_flags = [
-    f for f in flags
-    if f.flag_type == "quantitative_claim"
-    and f.text.lower().strip() not in _VAGUE_WORDS
-    and len(f.text.strip()) > 3
-] if flags else []
-comp_flags = [f for f in flags if f.flag_type == "comparative_claim"] if flags else []
-
-checkable_flags = quant_flags + comp_flags
-if checkable_flags and text.strip():
+quant_flags = [f for f in flags if f.flag_type == "quantitative_claim"] if flags else []
+if quant_flags and text.strip():
     st.divider()
     st.subheader("Fact checker")
     st.caption(
-        "Verify figures and ranking claims against a source URL or via web search. "
+        "Verify specific figures against a source URL or via web search. "
         "Results cite the source used — always confirm before publishing."
     )
 
-    for i, f in enumerate(checkable_flags):
-        label = "figure" if f.flag_type == "quantitative_claim" else "ranking claim"
-        with st.expander(f'"{f.text}" — {f.flag_type.replace("_", " ")}', expanded=False):
+    for i, f in enumerate(quant_flags):
+        with st.expander(f'"{f.text}"', expanded=False):
             source_url = st.text_input(
                 "Source URL (optional — leave blank to search the web)",
                 key=f"fc_url_{i}",
                 placeholder="https://...",
             )
-            if st.button(f"Verify this {label}", key=f"fc_btn_{i}", type="primary"):
+            if st.button("Verify this figure", key=f"fc_btn_{i}", type="primary"):
                 with st.spinner("Searching…"):
                     try:
-                        if f.flag_type == "comparative_claim":
-                            fc = fact_check_comparative(f.text, text, source_url.strip())
-                        else:
-                            fc = fact_check_claim(f.text, text, source_url.strip())
+                        fc = fact_check_claim(f.text, text, source_url.strip())
                         st.session_state[f"fc_result_{i}"] = fc
                     except Exception as e:
                         st.session_state[f"fc_result_{i}"] = None
