@@ -51,14 +51,17 @@ or no longer exist in its cited form
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
   "flag": true,
-  "issue_types": ["vague_attribution", "quantitative_claim"],
+  "spans": [
+    {"flag_type": "vague_attribution", "text": "experts say", "reason": "No named source"},
+    {"flag_type": "quantitative_claim", "text": "1.56 million", "reason": "Specific figure needs sourcing"}
+  ],
   "explanation": "One concise sentence explaining the main risk."
 }
 
 If there are no risk patterns, reply:
 {
   "flag": false,
-  "issue_types": [],
+  "spans": [],
   "explanation": "No significant risk patterns identified."
 }
 """
@@ -68,14 +71,15 @@ If there are no risk patterns, reply:
 class AIResult:
     flagged: bool
     issue_types: list[str]
+    spans: list[dict]
     explanation: str
     llm_only: list[str]
     tool_only: list[str]
     agreed: bool
 
 
-def run_ai_check(text: str, tool_flag_types: list[str]) -> AIResult:
-    """Call GPT-4o and return an AIResult with comparison vs tool flags."""
+def run_ai_check(text: str, tool_flags: list) -> AIResult:
+    """Call GPT-4o and return an AIResult with spans and comparison vs tool flags."""
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -92,11 +96,18 @@ def run_ai_check(text: str, tool_flag_types: list[str]) -> AIResult:
     parsed = json.loads(raw)
 
     flagged = bool(parsed.get("flag", False))
-    raw_types = parsed.get("issue_types", [])
-    if isinstance(raw_types, str):
-        raw_types = [t.strip() for t in raw_types.split(",")]
-    llm_types = [t for t in raw_types if t in VALID_ISSUE_TYPES]
     explanation = str(parsed.get("explanation", "")).strip()
+
+    raw_spans = parsed.get("spans", [])
+    spans = [
+        {"flag_type": s["flag_type"], "text": s.get("text", ""), "reason": s.get("reason", "")}
+        for s in raw_spans
+        if isinstance(s, dict) and s.get("flag_type") in VALID_ISSUE_TYPES
+    ]
+    llm_types = list(dict.fromkeys(s["flag_type"] for s in spans))  # unique, order preserved
+
+    tool_flag_types = [f.flag_type for f in tool_flags]
+    tool_spans = [{"flag_type": f.flag_type, "text": f.text, "reason": f.reason} for f in tool_flags]
 
     tool_set = set(tool_flag_types)
     llm_set = set(llm_types)
@@ -107,13 +118,14 @@ def run_ai_check(text: str, tool_flag_types: list[str]) -> AIResult:
     result = AIResult(
         flagged=flagged,
         issue_types=llm_types,
+        spans=spans,
         explanation=explanation,
         llm_only=llm_only,
         tool_only=tool_only,
         agreed=agreed,
     )
 
-    _log_to_supabase(text, tool_flag_types, llm_types, agreed, llm_only, tool_only)
+    _log_to_supabase(text, tool_flag_types, tool_spans, llm_types, spans, agreed, llm_only, tool_only)
 
     return result
 
@@ -121,7 +133,9 @@ def run_ai_check(text: str, tool_flag_types: list[str]) -> AIResult:
 def _log_to_supabase(
     text: str,
     tool_flags: list[str],
+    tool_spans: list[dict],
     llm_flags: list[str],
+    llm_spans: list[dict],
     agreed: bool,
     llm_only: list[str],
     tool_only: list[str],
@@ -136,7 +150,9 @@ def _log_to_supabase(
         sb.table("comparisons").insert({
             "text": text,
             "tool_flags": tool_flags,
+            "tool_spans": tool_spans,
             "llm_flags": llm_flags,
+            "llm_spans": llm_spans,
             "agreed": agreed,
             "llm_only": llm_only,
             "tool_only": tool_only,

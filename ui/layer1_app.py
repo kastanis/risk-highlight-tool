@@ -238,9 +238,8 @@ if flags:
 if st.session_state.get("ai_enabled") and text.strip():
     if st.session_state.get("run_ai"):
         with st.spinner("Running GPT-4o…"):
-            tool_types = sorted({f.flag_type for f in flags})
             try:
-                ai_result = run_ai_check(text, tool_types)
+                ai_result = run_ai_check(text, flags)
                 st.session_state["ai_result"] = ai_result
             except Exception as e:
                 st.session_state["ai_result"] = None
@@ -260,16 +259,17 @@ if st.session_state.get("ai_enabled") and text.strip():
 
         if ai_result.llm_only:
             st.markdown("**Flag types found by AI but not tool:**")
+            llm_only_spans = [s for s in ai_result.spans if s["flag_type"] in ai_result.llm_only]
             rows_html = ""
-            for ft in ai_result.llm_only:
+            for s in llm_only_spans:
                 rows_html += (
                     "<tr style='border-bottom:1px solid #eee'>"
-                    f"<td style='padding:5px 10px;font-weight:bold;font-size:12px'>{ft.replace('_', ' ')}</td>"
+                    f"<td style='padding:5px 10px;font-weight:bold;font-size:12px'>{s['flag_type'].replace('_', ' ')}</td>"
                     "<td style='padding:5px 10px'>"
                     "<span style='background:#7950f2;color:#fff;padding:1px 6px;"
                     "border-radius:3px;font-size:11px'>AI</span></td>"
-                    "<td style='padding:5px 10px;font-size:12px;color:#444'>"
-                    "Identified by GPT-4o — not caught by rule-based tool</td>"
+                    f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{html.escape(s['text'])}</td>"
+                    f"<td style='padding:5px 10px;font-size:12px;color:#444'>{html.escape(s['reason'])}</td>"
                     "</tr>"
                 )
             st.markdown(
