@@ -10,11 +10,15 @@ import sys
 from pathlib import Path
 
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
+from risk_highlight.ai_check import run_ai_check  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -230,6 +234,54 @@ if flags:
     else:
         st.info("No flag types selected — use the sidebar to enable categories.")
 
+# --- AI second pass ---
+if st.session_state.get("ai_enabled") and text.strip():
+    if st.session_state.get("run_ai"):
+        with st.spinner("Running GPT-4o…"):
+            tool_types = sorted({f.flag_type for f in flags})
+            try:
+                ai_result = run_ai_check(text, tool_types)
+                st.session_state["ai_result"] = ai_result
+            except Exception as e:
+                st.session_state["ai_result"] = None
+                st.error(f"AI check failed: {e}")
+
+    ai_result = st.session_state.get("ai_result")
+    if ai_result:
+        st.divider()
+        st.subheader("AI second pass (GPT-4o)")
+
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("LLM flagged", "Yes" if ai_result.flagged else "No")
+        col_b.metric("LLM-only finds", len(ai_result.llm_only))
+        col_c.metric("Agreed with tool", "Yes" if ai_result.agreed else "No")
+
+        st.caption(f"**GPT-4o explanation:** {ai_result.explanation}")
+
+        if ai_result.llm_only:
+            st.markdown("**Flag types found by AI but not tool:**")
+            rows_html = ""
+            for ft in ai_result.llm_only:
+                rows_html += (
+                    "<tr style='border-bottom:1px solid #eee'>"
+                    f"<td style='padding:5px 10px;font-weight:bold;font-size:12px'>{ft.replace('_', ' ')}</td>"
+                    "<td style='padding:5px 10px'>"
+                    "<span style='background:#7950f2;color:#fff;padding:1px 6px;"
+                    "border-radius:3px;font-size:11px'>AI</span></td>"
+                    "<td style='padding:5px 10px;font-size:12px;color:#444'>"
+                    "Identified by GPT-4o — not caught by rule-based tool</td>"
+                    "</tr>"
+                )
+            st.markdown(
+                f"<table style='font-family:sans-serif;border-collapse:collapse;width:100%'>"
+                f"<tbody>{rows_html}</tbody></table>",
+                unsafe_allow_html=True,
+            )
+
+        if ai_result.tool_only:
+            st.markdown("**Flag types found by tool but not AI:**")
+            st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
+
 # --- Sidebar ---
 with st.sidebar:
     st.header("Show / hide flag types")
@@ -244,6 +296,22 @@ with st.sidebar:
     st.markdown("**Medium priority**")
     for ft in sorted(med_types):
         st.checkbox(ft.replace("_", " "), value=True, key=f"cb_{ft}")
+
+    st.divider()
+    st.header("AI second pass")
+    ai_enabled = st.toggle("Enable GPT-4o check", key="ai_enabled")
+    if ai_enabled:
+        import os
+        if not os.getenv("OPENAI_API_KEY"):
+            st.warning("OPENAI_API_KEY not set in .env")
+        else:
+            st.button(
+                "Run AI check",
+                key="run_ai",
+                type="primary",
+                use_container_width=True,
+                disabled=not text.strip(),
+            )
 
     st.divider()
     st.header("About")
