@@ -19,6 +19,7 @@ from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
 from risk_highlight.ai_check import run_ai_check  # noqa: E402
+from risk_highlight.fact_check import fact_check_claim  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +282,53 @@ if st.session_state.get("ai_enabled") and text.strip():
         if ai_result.tool_only:
             st.markdown("**Flag types found by tool but not AI:**")
             st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
+
+# --- Fact checker ---
+quant_flags = [f for f in flags if f.flag_type == "quantitative_claim"] if flags else []
+if quant_flags and text.strip():
+    st.divider()
+    st.subheader("Fact checker")
+    st.caption(
+        "Verify specific figures against a source URL or via web search. "
+        "Results cite the source used — always confirm before publishing."
+    )
+
+    for i, f in enumerate(quant_flags):
+        with st.expander(f'"{f.text}"', expanded=False):
+            source_url = st.text_input(
+                "Source URL (optional — leave blank to search the web)",
+                key=f"fc_url_{i}",
+                placeholder="https://...",
+            )
+            if st.button("Verify this figure", key=f"fc_btn_{i}", type="primary"):
+                with st.spinner("Searching…"):
+                    try:
+                        fc = fact_check_claim(f.text, text, source_url.strip())
+                        st.session_state[f"fc_result_{i}"] = fc
+                    except Exception as e:
+                        st.session_state[f"fc_result_{i}"] = None
+                        st.error(f"Fact check failed: {e}")
+
+            fc = st.session_state.get(f"fc_result_{i}")
+            if fc:
+                verdict_color = {
+                    "confirmed": "#2f9e44",
+                    "discrepancy": "#e03131",
+                    "unverifiable": "#868e96",
+                }.get(fc.verdict, "#868e96")
+
+                st.markdown(
+                    f"<div style='margin-top:8px'>"
+                    f"<span style='background:{verdict_color};color:#fff;padding:3px 10px;"
+                    f"border-radius:4px;font-weight:bold;font-size:13px'>"
+                    f"{fc.verdict.upper()}</span></div>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(f"**{fc.explanation}**")
+                if fc.authoritative_value:
+                    st.caption(f"Authoritative figure: {fc.authoritative_value}")
+                if fc.source:
+                    st.caption(f"Source: {fc.source}")
 
 # --- Sidebar ---
 with st.sidebar:
