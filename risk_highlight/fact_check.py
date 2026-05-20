@@ -31,8 +31,14 @@ If a source URL is provided, check whether the figure in the claim \
 matches what the source actually says.
 
 If no source URL is provided, search the web for the most authoritative \
-current figure from government agencies, academic institutions, or \
-major news organizations.
+current figure. Prioritize sources in this order:
+1. Government agencies (USDA, CDC, BLS, Census Bureau, Fed, etc.)
+2. Academic institutions and peer-reviewed research
+3. Official international bodies (UN, WHO, World Bank, IMF)
+4. Primary data providers (financial exchanges, court records, official filings)
+5. News organizations only as a last resort — and only if they cite a primary source
+
+Always cite the primary source directly, not a news article that references it.
 
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
