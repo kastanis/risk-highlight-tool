@@ -5,6 +5,7 @@ Run:
     uv run streamlit run ui/layer1_app.py
 """
 
+import html
 import sys
 from pathlib import Path
 
@@ -34,14 +35,17 @@ def _resolve_overlaps(flags: list[Flag]) -> list[tuple[Flag, list[Flag]]]:
 def render_highlighted(text: str, flags: list[Flag]) -> str:
     """Returns HTML with inline colored highlights and hover tooltips."""
     if not flags:
-        return f"<p style='font-family:sans-serif;font-size:15px;line-height:1.8'>{text}</p>"
+        return (
+            f"<p style='font-family:sans-serif;font-size:15px;line-height:1.8'>"
+            f"{html.escape(text)}</p>"
+        )
 
     resolved = _resolve_overlaps(flags)
     parts = []
     cursor = 0
 
     for primary, co_flags in resolved:
-        segment = text[cursor:primary.start]
+        segment = html.escape(text[cursor:primary.start])
         parts.append(segment.replace("\n", "<br>"))
 
         color = FLAG_COLORS.get(primary.flag_type, "#eeeeee")
@@ -51,23 +55,23 @@ def render_highlighted(text: str, flags: list[Flag]) -> str:
             lines = " | ".join(
                 f"{f.flag_type}: {f.reason}" for f in co_flags
             )
-            tooltip = f"MULTIPLE FLAGS — {lines}"
+            tooltip = html.escape(f"MULTIPLE FLAGS — {lines}")
             style = (
                 f"background:{color};padding:2px 4px;border-radius:3px;"
                 f"cursor:help;text-decoration:underline dotted #333;text-underline-offset:3px"
             )
             indicator = '<sup style="font-size:9px;color:#333">+</sup>'
         else:
-            tooltip = f"{primary.flag_type}: {primary.reason}"
+            tooltip = html.escape(f"{primary.flag_type}: {primary.reason}")
             style = f"background:{color};padding:2px 4px;border-radius:3px;cursor:help"
             indicator = ""
 
         parts.append(
-            f'<mark style="{style}" title="{tooltip}">{primary.text}{indicator}</mark>'
+            f'<mark style="{style}" title="{tooltip}">{html.escape(primary.text)}{indicator}</mark>'
         )
         cursor = primary.end
 
-    tail = text[cursor:].replace("\n", "<br>")
+    tail = html.escape(text[cursor:]).replace("\n", "<br>")
     parts.append(tail)
 
     return (
