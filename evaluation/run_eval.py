@@ -69,7 +69,7 @@ REGEX_PATTERNS = [
         | \b(?:one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:million|billion|thousand)\b
      """, re.IGNORECASE)),
 
-    ("vague_attribution", "High", "Unattributed source",
+    ("vague_attribution", "High", "Unattributed source — who specifically?",
      re.compile(r"""(?x)
         \b(?:experts?|officials?|researchers?|scientists?|analysts?|sources?|
            investigators?|authorities|critics?|observers?|insiders?|advocates?)
@@ -80,6 +80,7 @@ REGEX_PATTERNS = [
         | \baccording\s+to\s+(?:sources?|officials?|experts?|reports?)\b
         | \bmany\s+(?:believe|say|argue|think|feel)\b
         | \bsome\s+(?:believe|say|argue|think|suggest)\b
+        | \b(?:economists?|doctors?|lawyers?|professors?|historians?|sociologists?|psychologists?)\s+(?:say|says|said|argue|argues|argued|warn|warns|warned|suggest|suggests|suggested|claim|claims|claimed)\b
      """, re.IGNORECASE)),
 
     ("passive_attribution", "High", "Actor removed — who found/reported/estimated this?",
@@ -92,6 +93,8 @@ REGEX_PATTERNS = [
         | \bit\s+(?:appears?|seems?|looks?)\s+(?:that\s+)?(?:the\s+)?(?:data\s+)?(?:suggests?|shows?|indicates?)
         | \b(?:is|are|was|were)\s+(?:widely\s+)?(?:believed|reported|understood|considered|known)\s+to\b
         | \bhas\s+been\s+(?:widely\s+)?(?:reported|noted|documented|established|confirmed)\b
+        | \b(?:was|were|has\s+been)\s+found\s+to\b
+        | \b(?:is|was|were)\s+(?:widely\s+)?considered\s+(?:too|very|quite|an?\s+\w+|the\s+\w+)
      """, re.IGNORECASE)),
 
     ("trend_language", "Medium", "Directional language",
@@ -130,9 +133,15 @@ REGEX_PATTERNS = [
 ]
 
 CAUSAL_CONNECTIVES = [
-    "led to", "leads to", "caused", "causes", "resulted in",
-    "because of", "due to", "owing to", "triggered", "drove",
-    "produced", "contributed to", "as a result of",
+    "led to", "leads to", "lead to",
+    "caused", "causes", "cause",
+    "resulted in", "results in",
+    "because of", "due to", "owing to",
+    "triggered", "triggers",
+    "drove", "drives",
+    "produced", "produces",
+    "contributed to", "contributes to",
+    "as a result of", "as a consequence of",
 ]
 
 CERTAINTY_VERBS = {
@@ -142,15 +151,11 @@ CERTAINTY_VERBS = {
 }
 
 NER_RULES = {
-    "PERSON":   ("named_entity",       "Medium", "PERSON"),
-    "ORG":      ("named_entity",       "Medium", "ORG"),
-    "GPE":      ("named_entity",       "Medium", "GPE"),
-    "NORP":     ("named_entity",       "Medium", "NORP"),
-    "MONEY":    ("quantitative_claim", "High",   "Monetary amount"),
-    "CARDINAL": ("quantitative_claim", "High",   "Specific count"),
-    "PERCENT":  ("quantitative_claim", "High",   "Percentage"),
-    "DATE":     ("temporal_claim",     "Medium", "Date"),
-    "TIME":     ("temporal_claim",     "Medium", "Time"),
+    "MONEY":    ("quantitative_claim", "High",   "Monetary amount — verify figure and source"),
+    "CARDINAL": ("quantitative_claim", "High",   "Specific count — verify figure and source"),
+    "PERCENT":  ("quantitative_claim", "High",   "Percentage — verify figure and source"),
+    "DATE":     ("temporal_claim",     "Medium", "Date — verify accuracy and relevance"),
+    "TIME":     ("temporal_claim",     "Medium", "Time — verify accuracy (exact times are high-risk in breaking news)"),
 }
 
 
