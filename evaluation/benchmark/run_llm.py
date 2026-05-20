@@ -41,7 +41,7 @@ VALID_ISSUE_TYPES = {
     "trend_language",
     "comparative_claim",
     "temporal_claim",
-    "named_entity",
+    "agency_name",
 }
 
 SYSTEM_PROMPT = """\
@@ -65,8 +65,8 @@ sharply", "dramatically declined" — directional language without magnitude
 "all-time" — comparison without stated baseline
   temporal_claim       — "last year", "since 2010", "over the past decade", \
 "historically" — time reference to verify
-  named_entity         — person, organization, or place name that introduces \
-a factual claim requiring verification
+  agency_name          — federal agency name that may be misspelled, \
+outdated, restructured, or no longer exist in its cited form
 
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
