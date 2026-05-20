@@ -43,9 +43,11 @@ Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 }
 
 Verdicts:
-- confirmed: the figure in the claim matches authoritative sources
-- discrepancy: the figure differs meaningfully from what sources show
+- confirmed: the figure in the claim exactly matches what the authoritative source says
+- discrepancy: the figure in the claim differs from what the source shows — use this even if the difference seems explainable or the source uses a slightly different framing. If the numbers do not match, it is a discrepancy, not confirmed.
 - unverifiable: could not find a reliable authoritative source to check against
+
+IMPORTANT: Do not rationalize or reconcile differences between the claim and the source. If the claim says 58% and the source says 68%, that is a discrepancy. Report what the source actually says in authoritative_value and flag it as discrepancy.
 """
 
 
