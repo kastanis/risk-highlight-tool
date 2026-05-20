@@ -2,6 +2,14 @@
 where = ["."]
 include = ["risk_highlight*"]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
 [project]
 name = "risk-highlight-tool"
 version = "0.1.0"
