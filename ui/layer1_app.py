@@ -328,9 +328,9 @@ if quant_flags and text.strip():
                     f"{fc.verdict.upper()}</span></div>",
                     unsafe_allow_html=True,
                 )
-                st.markdown(f"**{fc.explanation}**")
+                st.markdown(f"**{fc.explanation.replace('$', r'\\$')}**")
                 if fc.authoritative_value:
-                    st.caption(f"Authoritative figure: {fc.authoritative_value}")
+                    st.caption(f"Authoritative figure: {fc.authoritative_value.replace('$', r'\\$')}")
                 if fc.source:
                     st.caption(f"Source: {fc.source}")
 
