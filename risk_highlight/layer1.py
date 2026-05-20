@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import spacy
+from rapidfuzz import fuzz, process
 
 
 @dataclass
@@ -34,9 +35,10 @@ FLAG_COLORS = {
     "trend_language":      "#63e6be",
     "comparative_claim":   "#a9e34b",
     "temporal_claim":      "#ffa8a8",
+    "agency_name":         "#cc5de8",  # purple
 }
 
-HIGH_FLAGS = {"quantitative_claim", "vague_attribution", "passive_attribution", "causal_claim"}
+HIGH_FLAGS = {"quantitative_claim", "vague_attribution", "passive_attribution", "causal_claim", "agency_name"}
 
 REGEX_PATTERNS = [
     ("quantitative_claim", "High", "Hedged figure — does the reporter have the exact number?",
@@ -184,6 +186,130 @@ def _load_yaml_patterns() -> list:
 REGEX_PATTERNS = REGEX_PATTERNS + _load_yaml_patterns()
 
 
+# ---------------------------------------------------------------------------
+# Agency name index — loaded once at module level
+# ---------------------------------------------------------------------------
+
+def _load_agency_index(max_tier: int = 1) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
+    """
+    Returns (full_names, abbreviations) where each entry is
+    (match_string, canonical_name, status).
+    Only loads agencies with tier <= max_tier (default: tier 1 only).
+    """
+    path = Path(__file__).parent.parent / "data" / "agencies" / "federal_agencies.yaml"
+    if not path.exists():
+        return [], []
+    try:
+        import yaml
+        data = yaml.safe_load(path.read_text()) or {}
+    except Exception as e:
+        print(f"Warning: failed to load federal_agencies.yaml: {e}")
+        return [], []
+
+    full_names = []
+    abbreviations = []
+    for a in data.get("agencies", []):
+        if a.get("tier", 2) > max_tier:
+            continue
+        canonical = a.get("canonical", "")
+        status = a.get("status", "active")
+        if not canonical:
+            continue
+        full_names.append((canonical, canonical, status))
+        for abbr in a.get("abbreviations", []):
+            if not abbr:
+                continue
+            abbreviations.append((abbr, canonical, status))
+            # Long alternates (e.g. "Department of Justice") also go in full_names
+            # so spaCy ORG spans that exactly match them aren't flagged as near-misses.
+            if len(abbr) >= 6 and not re.match(r'^[A-Z]{2,8}$', abbr):
+                full_names.append((abbr, canonical, status))
+
+    return full_names, abbreviations
+
+
+_AGENCY_FULL, _AGENCY_ABBR = _load_agency_index()
+_AGENCY_FULL_STRINGS = [t[0] for t in _AGENCY_FULL]
+_AGENCY_ABBR_STRINGS = [t[0] for t in _AGENCY_ABBR]
+
+# Thresholds: abbreviations need higher score (short strings are noisy at low thresholds)
+_ABBR_THRESHOLD = 85
+_FULL_THRESHOLD = 88
+
+
+def _flag_agencies(text: str) -> list[Flag]:
+    """
+    Finds agency mentions in text using two-pass fuzzy matching:
+    - Short all-caps tokens → matched against abbreviation list
+    - Longer spans (via spaCy ORG entities) → matched against full name list
+
+    Only flags near-misses (close but not exact). Exact matches pass clean.
+    """
+    if not _AGENCY_FULL and not _AGENCY_ABBR:
+        return []
+
+    flags = []
+    nlp = load_nlp()
+    doc = nlp(text)
+
+    # Pass 1: abbreviation matching on short all-caps tokens
+    abbr_pattern = re.compile(r'\b[A-Z]{2,8}\b')
+    for m in abbr_pattern.finditer(text):
+        token = m.group()
+        if not _AGENCY_ABBR_STRINGS:
+            continue
+        result = process.extractOne(token, _AGENCY_ABBR_STRINGS, scorer=fuzz.ratio)
+        if result is None:
+            continue
+        match_str, score, idx = result
+        if score >= _ABBR_THRESHOLD:
+            _, canonical, status = _AGENCY_ABBR[idx]
+            is_exact = token == match_str
+            if is_exact and status == "active":
+                continue  # exact match to active agency — no flag
+            if is_exact and status in ("restructured", "eliminated"):
+                reason = f"Agency status uncertain — {canonical} has been {status}. Verify before publishing."
+            else:
+                reason = f"Near-match to \"{canonical}\" ({score}% match) — verify spelling"
+            flags.append(Flag(
+                start=m.start(), end=m.end(), text=token,
+                flag_type="agency_name", priority="High", reason=reason
+            ))
+
+    # Pass 2: full name matching on spaCy ORG entities
+    for ent in doc.ents:
+        if ent.label_ != "ORG":
+            continue
+        span = ent.text.strip()
+        # Strip leading "the"/"The" — spaCy often includes it in ORG spans
+        span_norm = re.sub(r'^[Tt]he\s+', '', span)
+        if len(span_norm) < 6:  # too short for reliable full-name matching
+            continue
+        if not _AGENCY_FULL_STRINGS:
+            continue
+        result = process.extractOne(span_norm, _AGENCY_FULL_STRINGS, scorer=fuzz.token_sort_ratio)
+        if result is None:
+            continue
+        match_str, score, idx = result
+        if score >= _FULL_THRESHOLD:
+            match_str_val, canonical, status = _AGENCY_FULL[idx]
+            # Exact if span matches the canonical name OR any known alternate (match_str_val)
+            is_exact = (span_norm.lower() == canonical.lower()
+                        or span_norm.lower() == match_str_val.lower())
+            if is_exact and status == "active":
+                continue
+            if is_exact and status in ("restructured", "eliminated"):
+                reason = f"Agency status uncertain — {canonical} has been {status}. Verify before publishing."
+            else:
+                reason = f"Near-match to \"{canonical}\" ({score}% match) — verify agency name"
+            flags.append(Flag(
+                start=ent.start_char, end=ent.end_char, text=ent.text,
+                flag_type="agency_name", priority="High", reason=reason
+            ))
+
+    return flags
+
+
 _nlp = None
 
 
@@ -236,6 +362,7 @@ def flag_text(text: str) -> list[Flag]:
     nlp = load_nlp()
     doc = nlp(text)
     flags.extend(_flag_spacy(doc))
+    flags.extend(_flag_agencies(text))
 
     flags.sort(key=lambda f: (f.start, PRIORITY_RANK[f.priority]))
 
