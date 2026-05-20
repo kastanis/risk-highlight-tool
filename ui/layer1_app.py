@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
-from risk_highlight.ai_check import run_ai_check  # noqa: E402
+from risk_highlight.ai_check import run_ai_check, open_review  # noqa: E402
 from risk_highlight.fact_check import fact_check_claim  # noqa: E402
 
 
@@ -283,6 +283,39 @@ if st.session_state.get("ai_enabled") and text.strip():
             st.markdown("**Flag types found by tool but not AI:**")
             st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
 
+# --- Open review ---
+if st.session_state.get("or_enabled") and text.strip():
+    if st.session_state.get("run_or"):
+        with st.spinner("Reviewing…"):
+            try:
+                or_result = open_review(text)
+                st.session_state["or_result"] = or_result
+            except Exception as e:
+                st.session_state["or_result"] = None
+                st.error(f"Open review failed: {e}")
+
+    or_result = st.session_state.get("or_result")
+    if or_result:
+        st.divider()
+        st.subheader("Open review (GPT-4o)")
+        st.caption(or_result.get("summary", ""))
+
+        concerns = or_result.get("concerns", [])
+        if concerns:
+            for c in concerns:
+                phrase = c.get("text", "").replace("$", r"\$")
+                concern = c.get("concern", "").replace("$", r"\$")
+                st.markdown(
+                    f"<div style='border-left:3px solid #7950f2;padding:6px 12px;margin:6px 0;"
+                    f"background:#f8f0ff;border-radius:0 4px 4px 0'>"
+                    f"<span style='font-family:monospace;font-size:12px;color:#333'>\"{phrase}\"</span><br>"
+                    f"<span style='font-size:13px;color:#444'>{concern}</span>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.success("No editorial concerns identified.")
+
 # --- Fact checker ---
 _VAGUE_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "half"}
 quant_flags = [
@@ -360,6 +393,23 @@ with st.sidebar:
             st.button(
                 "Run AI check",
                 key="run_ai",
+                type="primary",
+                use_container_width=True,
+                disabled=not text.strip(),
+            )
+
+    st.divider()
+    st.header("Open review")
+    st.caption("Free-form editorial review — flags anything the LLM thinks deserves scrutiny, not limited to predefined categories.")
+    or_enabled = st.toggle("Enable open review", key="or_enabled")
+    if or_enabled:
+        import os
+        if not os.getenv("OPENAI_API_KEY"):
+            st.warning("OPENAI_API_KEY not set in .env")
+        else:
+            st.button(
+                "Run open review",
+                key="run_or",
                 type="primary",
                 use_container_width=True,
                 disabled=not text.strip(),

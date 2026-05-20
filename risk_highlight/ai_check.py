@@ -161,3 +161,65 @@ def _log_to_supabase(
         }).execute()
     except Exception as e:
         print(f"Warning: Supabase logging failed: {e}")
+
+
+OPEN_REVIEW_PROMPT = """\
+You are an experienced journalism editor reviewing a text excerpt before publication. \
+Flag anything a careful editor should question — do not limit yourself to any predefined \
+categories. Look for:
+
+- Factual claims that seem off, contradictory, or unverifiable
+- Numbers, dates, or figures that don't add up or seem inconsistent
+- Names, titles, or roles that may be wrong
+- Geographic errors or misattributions
+- Missing context that changes the meaning of a claim
+- Logical inconsistencies within the text
+- Agency or organization names that appear incorrect or outdated
+- Anachronisms or timeline errors
+- Anything that would typically trigger an editor's correction
+
+Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
+{
+  "concerns": [
+    {"text": "the exact phrase or sentence from the article", "concern": "brief explanation of what to check"},
+    {"text": "another phrase", "concern": "explanation"}
+  ],
+  "summary": "One sentence overall assessment."
+}
+
+If nothing stands out, reply:
+{
+  "concerns": [],
+  "summary": "No significant editorial concerns identified."
+}
+"""
+
+
+def open_review(text: str) -> dict:
+    """
+    Free-form editorial review — flags anything the LLM thinks deserves scrutiny,
+    not constrained to predefined flag types.
+    Returns dict with 'concerns' (list of {text, concern}) and 'summary'.
+    """
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        temperature=0,
+        messages=[
+            {"role": "system", "content": OPEN_REVIEW_PROMPT},
+            {"role": "user", "content": text},
+        ],
+        response_format={"type": "json_object"},
+    )
+    raw = response.choices[0].message.content or "{}"
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return {"concerns": [], "summary": "Could not parse review response."}
+
+    return {
+        "concerns": parsed.get("concerns", []),
+        "summary": parsed.get("summary", ""),
+    }
