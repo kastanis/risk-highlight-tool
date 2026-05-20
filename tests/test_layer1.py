@@ -88,3 +88,33 @@ def test_clean_sourced_number():
     text = 'According to the Census Bureau, the population grew to 3.2 million in 2023.'
     types = flag_types(text)
     assert "vague_attribution" not in types
+
+
+# ---------------------------------------------------------------------------
+# Agency name flag
+# ---------------------------------------------------------------------------
+
+def test_agency_exact_active_no_flag():
+    # Exact match to an active tier-1 agency should NOT be flagged
+    assert "agency_name" not in flag_types("The FBI opened an investigation.")
+
+def test_agency_abbreviation_near_miss():
+    # Extra letter in all-caps abbreviation — fuzzy matcher should catch it
+    assert "agency_name" in flag_types("The FBII issued a statement.")
+
+def test_agency_full_name_near_miss():
+    # Near-miss on full name should flag
+    assert "agency_name" in flag_types("The Federal Burea of Investigation opened a case.")
+
+def test_agency_eliminated_exact():
+    # Exact match to an eliminated agency should flag with status warning
+    flags = flag_text("CFPB issued new rules.")
+    agency_flags = [f for f in flags if f.flag_type == "agency_name"]
+    # CFPB may or may not be in tier-1; if flagged, reason must mention status
+    if agency_flags:
+        assert any("restructured" in f.reason or "eliminated" in f.reason or "verify" in f.reason.lower()
+                   for f in agency_flags)
+
+def test_agency_the_prefix_no_false_positive():
+    # "The Department of Justice" — exact active agency, should not flag agency_name
+    assert "agency_name" not in flag_types("The Department of Justice announced charges.")

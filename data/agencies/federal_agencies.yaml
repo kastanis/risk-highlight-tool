@@ -1,0 +1,1968 @@
+# Federal agency canonical names, abbreviations, and status.
+# Base list generated from federalregister.gov/api/v1/agencies — 2026-05-20.
+# Manually curated section at the bottom covers restructured/eliminated agencies.
+# Cabinet department canonical names and AP style notes follow AP Stylebook guidance.
+#
+# Fields:
+#   canonical     — official full name used for matching and display
+#   abbreviations — known short names, acronyms, and alternate forms
+#   status        — active | restructured | eliminated
+#   tier          — 1 (key agencies, loaded by default) | 2 (full list, opt-in)
+#   formerly      — previous canonical name (for restructured/renamed agencies)
+#   note          — editorial context, including AP style guidance
+
+agencies:
+  - canonical: "ACTION"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Administration Office, Executive Office of the President"
+    abbreviations: ["OA"]
+    status: active
+    tier: 2
+  - canonical: "Administrative Conference of the United States"
+    abbreviations: ["ACUS"]
+    status: active
+    tier: 2
+  - canonical: "Administrative Office of United States Courts"
+    abbreviations: ["AO"]
+    status: active
+    tier: 2
+  - canonical: "Advisory Council on Historic Preservation"
+    abbreviations: ["ACHP"]
+    status: active
+    tier: 2
+  - canonical: "Advocacy and Outreach Office"
+    abbreviations: ["OAO"]
+    status: active
+    tier: 2
+  - canonical: "Agency for Healthcare Research and Quality"
+    abbreviations: ["AHRQ"]
+    status: active
+    tier: 2
+  - canonical: "Agency for International Development"
+    abbreviations: ["USAID"]
+    status: active
+    tier: 2
+  - canonical: "Agency for Toxic Substances and Disease Registry"
+    abbreviations: ["ATSDR"]
+    status: active
+    tier: 2
+  - canonical: "Aging Administration"
+    abbreviations: ["AOA"]
+    status: active
+    tier: 2
+  - canonical: "Agricultural Marketing Service"
+    abbreviations: ["AMS"]
+    status: active
+    tier: 2
+  - canonical: "Agricultural Research Service"
+    abbreviations: ["ARS"]
+    status: active
+    tier: 2
+  - canonical: "Agriculture Department"
+    abbreviations: ["USDA", "Department of Agriculture", "U.S. Department of Agriculture"]
+    status: active
+    tier: 1
+    note: "AP style: Agriculture Department on first reference. USDA acceptable on second reference."
+  - canonical: "Air Force Department"
+    abbreviations: ["USAF"]
+    status: active
+    tier: 2
+  - canonical: "Air Quality National Commission"
+    abbreviations: ["NCAQ"]
+    status: active
+    tier: 2
+  - canonical: "Air Transportation Stabilization Board"
+    abbreviations: ["ATSB"]
+    status: active
+    tier: 2
+  - canonical: "Alaska Power Administration"
+    abbreviations: ["APA"]
+    status: active
+    tier: 2
+  - canonical: "Alcohol and Tobacco Tax and Trade Bureau"
+    abbreviations: ["TTB"]
+    status: active
+    tier: 2
+  - canonical: "Alcohol, Tobacco, Firearms, and Explosives Bureau"
+    abbreviations: ["ATF"]
+    status: active
+    tier: 1
+  - canonical: "American Battle Monuments Commission"
+    abbreviations: ["ABMC"]
+    status: active
+    tier: 2
+  - canonical: "Amtrak Reform Council"
+    abbreviations: ["ARC"]
+    status: active
+    tier: 2
+  - canonical: "Animal and Plant Health Inspection Service"
+    abbreviations: ["APHIS"]
+    status: active
+    tier: 2
+  - canonical: "Antitrust Division"
+    abbreviations: ["ANTITRUST"]
+    status: active
+    tier: 2
+  - canonical: "Antitrust Modernization Commission"
+    abbreviations: ["AMC"]
+    status: active
+    tier: 2
+  - canonical: "Appalachian Regional Commission"
+    abbreviations: ["ARC"]
+    status: active
+    tier: 2
+  - canonical: "Appalachian States Low-Level Radioactive Waste Commission"
+    abbreviations: ["APPAL"]
+    status: active
+    tier: 2
+  - canonical: "Appraisal Subcommittee of the Federal Financial Institutions Examination Council"
+    abbreviations: ["ASCFFIEC"]
+    status: active
+    tier: 2
+  - canonical: "Architect of the Capitol"
+    abbreviations: ["AOC"]
+    status: active
+    tier: 2
+  - canonical: "Architectural and Transportation Barriers Compliance Board"
+    abbreviations: ["ATBCB"]
+    status: active
+    tier: 2
+  - canonical: "Arctic Research Commission"
+    abbreviations: ["ARCTIC"]
+    status: active
+    tier: 2
+  - canonical: "Armed Forces Retirement Home"
+    abbreviations: ["AFRH"]
+    status: active
+    tier: 2
+  - canonical: "Arms Control and Disarmament Agency"
+    abbreviations: ["ACDA"]
+    status: active
+    tier: 2
+  - canonical: "Army Department"
+    abbreviations: ["USA"]
+    status: active
+    tier: 2
+  - canonical: "Assassination Records Review Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Barry M. Goldwater Scholarship and Excellence in Education Foundation"
+    abbreviations: ["BGSEEF"]
+    status: active
+    tier: 2
+  - canonical: "Benefits Review Board"
+    abbreviations: ["BRB"]
+    status: active
+    tier: 2
+  - canonical: "Bipartisan Commission on Entitlement and Tax Reform"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Board of Directors of the Hope for Homeowners Program"
+    abbreviations: ["HOPE"]
+    status: active
+    tier: 2
+  - canonical: "Bonneville Power Administration"
+    abbreviations: ["BPA"]
+    status: active
+    tier: 2
+  - canonical: "Broadcasting Board of Governors"
+    abbreviations: ["BBG"]
+    status: active
+    tier: 2
+  - canonical: "Bureau of the Fiscal Service"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Census Bureau"
+    abbreviations: ["USBC"]
+    status: active
+    tier: 1
+  - canonical: "Census Monitoring Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Centers for Disease Control and Prevention"
+    abbreviations: ["CDC"]
+    status: active
+    tier: 1
+  - canonical: "Centers for Medicare & Medicaid Services"
+    abbreviations: ["CMS"]
+    status: active
+    tier: 1
+  - canonical: "Central Intelligence Agency"
+    abbreviations: ["CIA"]
+    status: active
+    tier: 1
+  - canonical: "Chemical Safety and Hazard Investigation Board"
+    abbreviations: ["CSB"]
+    status: active
+    tier: 2
+  - canonical: "Child Support Enforcement Office"
+    abbreviations: ["CSEO"]
+    status: active
+    tier: 2
+  - canonical: "Children and Families Administration"
+    abbreviations: ["ACF"]
+    status: active
+    tier: 2
+  - canonical: "Christopher Columbus Quincentenary Jubilee Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Civil Rights Cold Case Records Review Board"
+    abbreviations: ["CRCCRRB"]
+    status: active
+    tier: 2
+  - canonical: "Civil Rights Commission"
+    abbreviations: ["CRC"]
+    status: active
+    tier: 2
+  - canonical: "Coast Guard"
+    abbreviations: ["USCG"]
+    status: active
+    tier: 2
+  - canonical: "Commerce Department"
+    abbreviations: ["DOC", "Department of Commerce", "U.S. Department of Commerce"]
+    status: active
+    tier: 1
+    note: "AP style: Commerce Department on first reference."
+  - canonical: "Commercial Space Transportation Office"
+    abbreviations: ["AST"]
+    status: active
+    tier: 2
+  - canonical: "Commission of Fine Arts"
+    abbreviations: ["CFA"]
+    status: active
+    tier: 2
+  - canonical: "Commission on Immigration Reform"
+    abbreviations: ["CIR"]
+    status: active
+    tier: 2
+  - canonical: "Commission on Protecting and Reducing Government Secrecy"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Commission on Review of Overseas Military Facility Structure of the United States"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Commission on Structural Alternatives for the Federal Courts of Appeals"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Commission on the Advancement of Federal Law Enforcement"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Commission on the Bicentennial of the United States Constitution"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Commission on the Future of the United States Aerospace Industry"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Commission on the Social Security Notch Issue"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Committee for Purchase From People Who Are Blind or Severely Disabled"
+    abbreviations: ["CPPBSD"]
+    status: active
+    tier: 2
+  - canonical: "Committee for the Implementation of Textile Agreements"
+    abbreviations: ["CITA"]
+    status: active
+    tier: 2
+  - canonical: "Commodity Credit Corporation"
+    abbreviations: ["CCC"]
+    status: active
+    tier: 2
+  - canonical: "Commodity Futures Trading Commission"
+    abbreviations: ["CFTC"]
+    status: active
+    tier: 2
+  - canonical: "Community Development Financial Institutions Fund"
+    abbreviations: ["CDFI"]
+    status: active
+    tier: 2
+  - canonical: "Community Living Administration"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Competitiveness Policy Council"
+    abbreviations: ["CPC"]
+    status: active
+    tier: 2
+  - canonical: "Comptroller of the Currency"
+    abbreviations: ["OCC"]
+    status: active
+    tier: 2
+  - canonical: "Congressional Budget Office"
+    abbreviations: ["CBO"]
+    status: active
+    tier: 1
+  - canonical: "Consumer Financial Protection Bureau"
+    abbreviations: ["CFPB"]
+    status: active
+    tier: 1
+  - canonical: "Consumer Product Safety Commission"
+    abbreviations: ["CPSC"]
+    status: active
+    tier: 2
+  - canonical: "Cooperative State Research, Education, and Extension Service"
+    abbreviations: ["CSREES"]
+    status: active
+    tier: 2
+  - canonical: "Coordinating Council on Juvenile Justice and Delinquency Prevention"
+    abbreviations: ["CCJJDP"]
+    status: active
+    tier: 2
+  - canonical: "Copyright Office, Library of Congress"
+    abbreviations: ["COLC"]
+    status: active
+    tier: 2
+  - canonical: "Copyright Royalty Board"
+    abbreviations: ["LOC"]
+    status: active
+    tier: 2
+  - canonical: "Copyright Royalty Judges"
+    abbreviations: ["CRJ"]
+    status: active
+    tier: 2
+  - canonical: "Corporation for National and Community Service"
+    abbreviations: ["CORP/CNCS"]
+    status: active
+    tier: 2
+  - canonical: "Council of the Inspectors General on Integrity and Efficiency"
+    abbreviations: ["CIGIE"]
+    status: active
+    tier: 2
+  - canonical: "Council on Environmental Quality"
+    abbreviations: ["CEQ"]
+    status: active
+    tier: 2
+  - canonical: "Counsel to the President"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Court Services and Offender Supervision Agency for the District of Columbia"
+    abbreviations: ["CSOSA"]
+    status: active
+    tier: 2
+  - canonical: "Crime and Security in U.S. Seaports, Interagency Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Customs Service"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Defense Acquisition Regulations System"
+    abbreviations: ["DARS"]
+    status: active
+    tier: 2
+  - canonical: "Defense Base Closure and Realignment Commission"
+    abbreviations: ["BRAC"]
+    status: active
+    tier: 2
+  - canonical: "Defense Contract Audit Agency"
+    abbreviations: ["DCAA"]
+    status: active
+    tier: 2
+  - canonical: "Defense Criminal Investigative Service"
+    abbreviations: ["DCIS"]
+    status: active
+    tier: 2
+  - canonical: "Defense Department"
+    abbreviations: ["DOD", "Department of Defense", "U.S. Department of Defense", "Pentagon"]
+    status: active
+    tier: 1
+    note: "AP style: Defense Department on first reference. DOD or Pentagon acceptable on second reference."
+  - canonical: "Defense Information Systems Agency"
+    abbreviations: ["DISA"]
+    status: active
+    tier: 2
+  - canonical: "Defense Intelligence Agency"
+    abbreviations: ["DIA"]
+    status: active
+    tier: 2
+  - canonical: "Defense Investigative Service"
+    abbreviations: ["DIS"]
+    status: active
+    tier: 2
+  - canonical: "Defense Logistics Agency"
+    abbreviations: ["DLA"]
+    status: active
+    tier: 2
+  - canonical: "Defense Mapping Agency"
+    abbreviations: ["DMA"]
+    status: active
+    tier: 2
+  - canonical: "Defense Nuclear Facilities Safety Board"
+    abbreviations: ["DNFSB"]
+    status: active
+    tier: 2
+  - canonical: "Defense Special Weapons Agency"
+    abbreviations: ["DSWA"]
+    status: active
+    tier: 2
+  - canonical: "Delaware River Basin Commission"
+    abbreviations: ["DRBC"]
+    status: active
+    tier: 2
+  - canonical: "Delta Regional Authority"
+    abbreviations: ["DRA"]
+    status: active
+    tier: 2
+  - canonical: "Denali Commission"
+    abbreviations: ["DC"]
+    status: active
+    tier: 2
+  - canonical: "Disability Employment Policy Office"
+    abbreviations: ["ODEP"]
+    status: active
+    tier: 2
+  - canonical: "Drug Enforcement Administration"
+    abbreviations: ["DEA"]
+    status: active
+    tier: 1
+  - canonical: "Economic Analysis Bureau"
+    abbreviations: ["EAB"]
+    status: active
+    tier: 2
+  - canonical: "Economic Analysis Staff"
+    abbreviations: ["EAS"]
+    status: active
+    tier: 2
+  - canonical: "Economic Development Administration"
+    abbreviations: ["EDA"]
+    status: active
+    tier: 2
+  - canonical: "Economic Research Service"
+    abbreviations: ["ERS"]
+    status: active
+    tier: 2
+  - canonical: "Economics and Statistics Administration"
+    abbreviations: ["ECSA"]
+    status: active
+    tier: 2
+  - canonical: "Education Department"
+    abbreviations: ["ED", "Department of Education", "U.S. Department of Education"]
+    status: active
+    tier: 1
+    note: "AP style: Education Department on first reference."
+  - canonical: "Election Assistance Commission"
+    abbreviations: ["EAC"]
+    status: active
+    tier: 2
+  - canonical: "Electronic Commerce Advisory Commission"
+    abbreviations: ["eCOMMERCE"]
+    status: active
+    tier: 2
+  - canonical: "Emergency Oil and Gas Guaranteed Loan Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Emergency Steel Guarantee Loan Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Employee Benefits Security Administration"
+    abbreviations: ["EBSA"]
+    status: active
+    tier: 2
+  - canonical: "Employees Compensation Appeals Board"
+    abbreviations: ["ECAB"]
+    status: active
+    tier: 2
+  - canonical: "Employment Standards Administration"
+    abbreviations: ["DOL"]
+    status: active
+    tier: 2
+  - canonical: "Employment and Training Administration"
+    abbreviations: ["ETA"]
+    status: active
+    tier: 2
+  - canonical: "Energy Department"
+    abbreviations: ["DOE", "Department of Energy", "U.S. Department of Energy"]
+    status: active
+    tier: 1
+    note: "AP style: Energy Department on first reference. DOE acceptable on second reference."
+  - canonical: "Energy Efficiency and Renewable Energy Office"
+    abbreviations: ["DOE"]
+    status: active
+    tier: 2
+  - canonical: "Energy Information Administration"
+    abbreviations: ["EIA"]
+    status: active
+    tier: 2
+  - canonical: "Energy Policy and New Uses Office"
+    abbreviations: ["OEPNU"]
+    status: active
+    tier: 2
+  - canonical: "Energy Research Office"
+    abbreviations: ["OER"]
+    status: active
+    tier: 2
+  - canonical: "Energy and Environmental Policy Office"
+    abbreviations: ["OEEP"]
+    status: active
+    tier: 2
+  - canonical: "Engineers Corps"
+    abbreviations: ["COE"]
+    status: active
+    tier: 2
+  - canonical: "Engraving and Printing Bureau"
+    abbreviations: ["BEP"]
+    status: active
+    tier: 2
+  - canonical: "Environment Office, Energy Department"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Environmental Protection Agency"
+    abbreviations: ["EPA"]
+    status: active
+    tier: 1
+  - canonical: "Equal Employment Opportunity Commission"
+    abbreviations: ["EEOC"]
+    status: active
+    tier: 2
+  - canonical: "Executive Council on Integrity and Efficiency"
+    abbreviations: ["ECIE"]
+    status: active
+    tier: 2
+  - canonical: "Executive Office for Immigration Review"
+    abbreviations: ["EOIR"]
+    status: active
+    tier: 2
+  - canonical: "Executive Office of the President"
+    abbreviations: ["EOP"]
+    status: active
+    tier: 1
+  - canonical: "Export Administration Bureau"
+    abbreviations: ["EAB"]
+    status: active
+    tier: 2
+  - canonical: "Export-Import Bank"
+    abbreviations: ["EIB/USEIB"]
+    status: active
+    tier: 2
+  - canonical: "Family Assistance Office"
+    abbreviations: ["OFA"]
+    status: active
+    tier: 2
+  - canonical: "Farm Credit Administration"
+    abbreviations: ["FCA"]
+    status: active
+    tier: 2
+  - canonical: "Farm Credit System Insurance Corporation"
+    abbreviations: ["FCSIC"]
+    status: active
+    tier: 2
+  - canonical: "Farm Production and Conservation Business Center"
+    abbreviations: ["FPACBC"]
+    status: active
+    tier: 2
+  - canonical: "Farm Service Agency"
+    abbreviations: ["FSA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Accounting Standards Advisory Board"
+    abbreviations: ["FASAB"]
+    status: active
+    tier: 2
+  - canonical: "Federal Acquisition Regulation System"
+    abbreviations: ["FAR"]
+    status: active
+    tier: 2
+  - canonical: "Federal Aviation Administration"
+    abbreviations: ["FAA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Bureau of Investigation"
+    abbreviations: ["FBI"]
+    status: active
+    tier: 1
+  - canonical: "Federal Communications Commission"
+    abbreviations: ["FCC"]
+    status: active
+    tier: 1
+  - canonical: "Federal Contract Compliance Programs Office"
+    abbreviations: ["OFCCP"]
+    status: active
+    tier: 2
+  - canonical: "Federal Council on the Arts and the Humanities"
+    abbreviations: ["FCAH"]
+    status: active
+    tier: 2
+  - canonical: "Federal Crop Insurance Corporation"
+    abbreviations: ["FCIC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Deposit Insurance Corporation"
+    abbreviations: ["FDIC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Election Commission"
+    abbreviations: ["FEC"]
+    status: active
+    tier: 1
+  - canonical: "Federal Emergency Management Agency"
+    abbreviations: ["FEMA"]
+    status: active
+    tier: 1
+  - canonical: "Federal Energy Regulatory Commission"
+    abbreviations: ["FERC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Financial Institutions Examination Council"
+    abbreviations: ["FFIEC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Highway Administration"
+    abbreviations: ["FHWA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Housing Enterprise Oversight Office"
+    abbreviations: ["OFHEO"]
+    status: active
+    tier: 2
+  - canonical: "Federal Housing Finance Agency"
+    abbreviations: ["FHFA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Housing Finance Board"
+    abbreviations: ["FHFB"]
+    status: active
+    tier: 2
+  - canonical: "Federal Labor Relations Authority"
+    abbreviations: ["FLRA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Law Enforcement Training Center"
+    abbreviations: ["FLETC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Maritime Commission"
+    abbreviations: ["FMC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Mediation and Conciliation Service"
+    abbreviations: ["FMCS"]
+    status: active
+    tier: 2
+  - canonical: "Federal Mine Safety and Health Review Commission"
+    abbreviations: ["MSHFRC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Motor Carrier Safety Administration"
+    abbreviations: ["FMCSA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Pay, Advisory Committee"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Federal Permitting Improvement Steering Council"
+    abbreviations: ["FPISC"]
+    status: active
+    tier: 2
+  - canonical: "Federal Prison Industries"
+    abbreviations: ["FPI"]
+    status: active
+    tier: 2
+  - canonical: "Federal Procurement Policy Office"
+    abbreviations: ["OFPP"]
+    status: active
+    tier: 2
+  - canonical: "Federal Railroad Administration"
+    abbreviations: ["FRA"]
+    status: active
+    tier: 2
+  - canonical: "Federal Register Office"
+    abbreviations: ["OFR"]
+    status: active
+    tier: 2
+  - canonical: "Federal Register, Administrative Committee"
+    abbreviations: ["ACFR"]
+    status: active
+    tier: 2
+  - canonical: "Federal Reserve System"
+    abbreviations: ["FRS"]
+    status: active
+    tier: 1
+  - canonical: "Federal Retirement Thrift Investment Board"
+    abbreviations: ["FRTIB"]
+    status: active
+    tier: 2
+  - canonical: "Federal Service Impasses Panel"
+    abbreviations: ["FSIP"]
+    status: active
+    tier: 2
+  - canonical: "Federal Trade Commission"
+    abbreviations: ["FTC"]
+    status: active
+    tier: 1
+  - canonical: "Federal Transit Administration"
+    abbreviations: ["FTA"]
+    status: active
+    tier: 2
+  - canonical: "Financial Crimes Enforcement Network"
+    abbreviations: ["TD"]
+    status: active
+    tier: 2
+  - canonical: "Financial Crisis Inquiry Commission"
+    abbreviations: ["FINCIC"]
+    status: active
+    tier: 2
+  - canonical: "Financial Research Office"
+    abbreviations: ["OFR"]
+    status: active
+    tier: 2
+  - canonical: "Financial Stability Oversight Council"
+    abbreviations: ["FSOC"]
+    status: active
+    tier: 2
+  - canonical: "First Responder Network Authority"
+    abbreviations: ["FirstNet"]
+    status: active
+    tier: 2
+  - canonical: "Fiscal Service"
+    abbreviations: ["FS"]
+    status: active
+    tier: 2
+  - canonical: "Fish and Wildlife Service"
+    abbreviations: ["FWS"]
+    status: active
+    tier: 2
+  - canonical: "Food Safety and Inspection Service"
+    abbreviations: ["FSIS"]
+    status: active
+    tier: 2
+  - canonical: "Food and Consumer Service"
+    abbreviations: ["FCS"]
+    status: active
+    tier: 2
+  - canonical: "Food and Drug Administration"
+    abbreviations: ["FDA"]
+    status: active
+    tier: 1
+  - canonical: "Food and Nutrition Service"
+    abbreviations: ["FNS"]
+    status: active
+    tier: 2
+  - canonical: "Foreign Agricultural Service"
+    abbreviations: ["FAS"]
+    status: active
+    tier: 2
+  - canonical: "Foreign Assets Control Office"
+    abbreviations: ["OFAC"]
+    status: active
+    tier: 2
+  - canonical: "Foreign Claims Settlement Commission"
+    abbreviations: ["FCSC"]
+    status: active
+    tier: 2
+  - canonical: "Foreign Service Grievance Board"
+    abbreviations: ["FSGB"]
+    status: active
+    tier: 2
+  - canonical: "Foreign Service Impasse Disputes Panel"
+    abbreviations: ["Disputes Panel"]
+    status: active
+    tier: 2
+  - canonical: "Foreign Service Labor Relations Board"
+    abbreviations: ["FSLRB"]
+    status: active
+    tier: 2
+  - canonical: "Foreign-Trade Zones Board"
+    abbreviations: ["FTZB"]
+    status: active
+    tier: 2
+  - canonical: "Forest Service"
+    abbreviations: ["FS"]
+    status: active
+    tier: 2
+  - canonical: "General Services Administration"
+    abbreviations: ["GSA"]
+    status: active
+    tier: 1
+  - canonical: "Geographic Names Board"
+    abbreviations: ["BGN"]
+    status: active
+    tier: 2
+  - canonical: "Geological Survey"
+    abbreviations: ["USGS"]
+    status: active
+    tier: 2
+  - canonical: "Government Accountability Office"
+    abbreviations: ["GAO"]
+    status: active
+    tier: 1
+  - canonical: "Government Ethics Office"
+    abbreviations: ["OGE"]
+    status: active
+    tier: 2
+  - canonical: "Government National Mortgage Association"
+    abbreviations: ["GinnieMae"]
+    status: active
+    tier: 2
+  - canonical: "Government Publishing Office"
+    abbreviations: ["GPO"]
+    status: active
+    tier: 2
+  - canonical: "Grain Inspection, Packers and Stockyards Administration"
+    abbreviations: ["GIPSA"]
+    status: active
+    tier: 2
+  - canonical: "Great Lakes St. Lawrence Seaway Development Corporation"
+    abbreviations: ["SAINT"]
+    status: active
+    tier: 2
+  - canonical: "Gulf Coast Ecosystem Restoration Council"
+    abbreviations: ["Gulf Restoration Council"]
+    status: active
+    tier: 2
+  - canonical: "Harry S. Truman Scholarship Foundation"
+    abbreviations: ["HST"]
+    status: active
+    tier: 2
+  - canonical: "Health Care Finance Administration"
+    abbreviations: ["HCFA"]
+    status: active
+    tier: 2
+  - canonical: "Health Resources and Services Administration"
+    abbreviations: ["HRSA"]
+    status: active
+    tier: 2
+  - canonical: "Department of Health and Human Services"
+    abbreviations: ["HHS", "Health and Human Services Department", "U.S. Department of Health and Human Services"]
+    status: active
+    tier: 1
+    note: "AP style exception: Department of Health and Human Services on first reference. HHS acceptable on second reference."
+  - canonical: "Hearings and Appeals Office, Energy Department"
+    abbreviations: ["DOE OHA"]
+    status: active
+    tier: 2
+  - canonical: "Hearings and Appeals Office, Interior Department"
+    abbreviations: ["DOI OHA"]
+    status: active
+    tier: 2
+  - canonical: "Department of Homeland Security"
+    abbreviations: ["DHS", "Homeland Security Department", "U.S. Department of Homeland Security"]
+    status: active
+    tier: 1
+    note: "AP style exception: Department of Homeland Security on first reference. DHS acceptable on second reference."
+  - canonical: "Department of Housing and Urban Development"
+    abbreviations: ["HUD", "Housing and Urban Development Department", "U.S. Department of Housing and Urban Development"]
+    status: active
+    tier: 1
+    note: "AP style exception: Department of Housing and Urban Development on first reference. HUD acceptable on second reference."
+  - canonical: "Immigration and Naturalization Service"
+    abbreviations: ["INS"]
+    status: active
+    tier: 2
+  - canonical: "Indian Affairs Bureau"
+    abbreviations: ["BIA"]
+    status: active
+    tier: 2
+  - canonical: "Indian Arts and Crafts Board"
+    abbreviations: ["IACB"]
+    status: active
+    tier: 2
+  - canonical: "Indian Health Service"
+    abbreviations: ["IHS"]
+    status: active
+    tier: 2
+  - canonical: "Indian Trust Transition Office"
+    abbreviations: ["OITT"]
+    status: active
+    tier: 2
+  - canonical: "Industry and Security Bureau"
+    abbreviations: ["BIS"]
+    status: active
+    tier: 2
+  - canonical: "Information Security Oversight Office"
+    abbreviations: ["ISOO"]
+    status: active
+    tier: 2
+  - canonical: "Inspector General Office, Agriculture Department"
+    abbreviations: ["OIG USDA"]
+    status: active
+    tier: 2
+  - canonical: "Inspector General Office, Health and Human Services Department"
+    abbreviations: ["OIG HHS"]
+    status: active
+    tier: 2
+  - canonical: "Inspector General Office, Treasury Department"
+    abbreviations: ["TOIG"]
+    status: active
+    tier: 2
+  - canonical: "Institute of American Indian and Alaska Native Culture and Arts Development"
+    abbreviations: ["IAIA"]
+    status: active
+    tier: 2
+  - canonical: "Institute of Museum and Library Services"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Intellectual Property Enforcement Coordinator Office"
+    abbreviations: ["IPEC"]
+    status: active
+    tier: 2
+  - canonical: "Inter-American Foundation"
+    abbreviations: ["IAF"]
+    status: active
+    tier: 2
+  - canonical: "Interagency Floodplain Management Review Committee"
+    abbreviations: ["IFMRC"]
+    status: active
+    tier: 2
+  - canonical: "Intergovernmental Relations Advisory Commission"
+    abbreviations: ["ACIR"]
+    status: active
+    tier: 2
+  - canonical: "Interior Department"
+    abbreviations: ["DOI", "Department of the Interior", "U.S. Department of the Interior"]
+    status: active
+    tier: 1
+    note: "AP style: Interior Department on first reference."
+  - canonical: "Internal Revenue Service"
+    abbreviations: ["IRS"]
+    status: active
+    tier: 1
+  - canonical: "International Boundary and Water Commission, United States and Mexico"
+    abbreviations: ["IBWC"]
+    status: active
+    tier: 2
+  - canonical: "International Broadcasting Advisory Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "International Broadcasting Board"
+    abbreviations: ["IBB"]
+    status: active
+    tier: 2
+  - canonical: "International Development Cooperation Agency"
+    abbreviations: ["IDCA"]
+    status: active
+    tier: 2
+  - canonical: "International Investment Office"
+    abbreviations: ["IIO"]
+    status: active
+    tier: 2
+  - canonical: "International Joint Commission-United States and Canada"
+    abbreviations: ["IJC"]
+    status: active
+    tier: 2
+  - canonical: "International Organizations Employees Loyalty Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "International Trade Administration"
+    abbreviations: ["ITA"]
+    status: active
+    tier: 2
+  - canonical: "International Trade Commission"
+    abbreviations: ["ITC"]
+    status: active
+    tier: 2
+  - canonical: "Interstate Commerce Commission"
+    abbreviations: ["ICC"]
+    status: active
+    tier: 2
+  - canonical: "Investment Security Office"
+    abbreviations: ["IIO"]
+    status: active
+    tier: 2
+  - canonical: "James Madison Memorial Fellowship Foundation"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Japan-United States Friendship Commission"
+    abbreviations: ["JUSFC"]
+    status: active
+    tier: 2
+  - canonical: "Joint Board for Enrollment of Actuaries"
+    abbreviations: ["JBEA"]
+    status: active
+    tier: 2
+  - canonical: "Judicial Conference of the United States"
+    abbreviations: ["USJC"]
+    status: active
+    tier: 2
+  - canonical: "Judicial Review Commission on Foreign Asset Control"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Justice Department"
+    abbreviations: ["DOJ", "Department of Justice", "U.S. Department of Justice"]
+    status: active
+    tier: 1
+    note: "AP style: Justice Department on first reference. DOJ acceptable on second reference."
+  - canonical: "Justice Programs Office"
+    abbreviations: ["OJP"]
+    status: active
+    tier: 2
+  - canonical: "Juvenile Justice and Delinquency Prevention Office"
+    abbreviations: ["OJJDP"]
+    status: active
+    tier: 2
+  - canonical: "Labor Department"
+    abbreviations: ["DOL", "Department of Labor", "U.S. Department of Labor"]
+    status: active
+    tier: 1
+    note: "AP style: Labor Department on first reference."
+  - canonical: "Labor Statistics Bureau"
+    abbreviations: ["BLS"]
+    status: active
+    tier: 2
+  - canonical: "Labor-Management Standards Office"
+    abbreviations: ["LMSO"]
+    status: active
+    tier: 2
+  - canonical: "Land Management Bureau"
+    abbreviations: ["BLM"]
+    status: active
+    tier: 2
+  - canonical: "Legal Services Corporation"
+    abbreviations: ["LSC"]
+    status: active
+    tier: 2
+  - canonical: "Library of Congress"
+    abbreviations: ["LOC"]
+    status: active
+    tier: 2
+  - canonical: "Local Television Loan Guarantee Board"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Management and Budget Office"
+    abbreviations: ["OMB"]
+    status: active
+    tier: 2
+  - canonical: "Marine Mammal Commission"
+    abbreviations: ["MMC"]
+    status: active
+    tier: 2
+  - canonical: "Maritime Administration"
+    abbreviations: ["MARAD"]
+    status: active
+    tier: 2
+  - canonical: "Medicare Payment Advisory Commission"
+    abbreviations: ["MedPAC"]
+    status: active
+    tier: 2
+  - canonical: "Merit Systems Protection Board"
+    abbreviations: ["MSPB"]
+    status: active
+    tier: 2
+  - canonical: "Military Compensation and Retirement Modernization Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Millennium Challenge Corporation"
+    abbreviations: ["MCC"]
+    status: active
+    tier: 2
+  - canonical: "Mine Safety and Health Administration"
+    abbreviations: ["MSHA"]
+    status: active
+    tier: 2
+  - canonical: "Minerals Management Service"
+    abbreviations: ["MMS"]
+    status: active
+    tier: 2
+  - canonical: "Mines Bureau"
+    abbreviations: ["USBM"]
+    status: active
+    tier: 2
+  - canonical: "Minority Business Development Agency"
+    abbreviations: ["MBDA"]
+    status: active
+    tier: 2
+  - canonical: "Minority Economic Impact Office"
+    abbreviations: ["OMEI"]
+    status: active
+    tier: 2
+  - canonical: "Mississippi River Commission"
+    abbreviations: ["MISS"]
+    status: active
+    tier: 2
+  - canonical: "Monetary Offices"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Morris K. Udall and Stewart L. Udall Foundation"
+    abbreviations: ["Udall Foundation"]
+    status: active
+    tier: 2
+  - canonical: "National Aeronautics and Space Administration"
+    abbreviations: ["NASA"]
+    status: active
+    tier: 1
+  - canonical: "National Agricultural Library"
+    abbreviations: ["NAL"]
+    status: active
+    tier: 2
+  - canonical: "National Agricultural Statistics Service"
+    abbreviations: ["NASS"]
+    status: active
+    tier: 2
+  - canonical: "National Archives and Records Administration"
+    abbreviations: ["NARA"]
+    status: active
+    tier: 2
+  - canonical: "National Assessment Governing Board"
+    abbreviations: ["NAGB"]
+    status: active
+    tier: 2
+  - canonical: "National Bankruptcy Review Commission"
+    abbreviations: ["NBRC"]
+    status: active
+    tier: 2
+  - canonical: "National Biological Service"
+    abbreviations: ["NBS"]
+    status: active
+    tier: 2
+  - canonical: "National Bipartisan Commission on Future of Medicare"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Capital Planning Commission"
+    abbreviations: ["NCPC"]
+    status: active
+    tier: 2
+  - canonical: "National Civilian Community Corps"
+    abbreviations: ["NCCC"]
+    status: active
+    tier: 2
+  - canonical: "National Commission on Fiscal Responsibility and Reform"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Commission on Intermodal Transportation"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Commission on Libraries and Information Science"
+    abbreviations: ["NCLIS"]
+    status: active
+    tier: 2
+  - canonical: "National Commission on Manufactured Housing"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Commission on Military, National, and Public Service"
+    abbreviations: ["NCMNPS"]
+    status: active
+    tier: 2
+  - canonical: "National Commission on Terrorist Attacks Upon the United States"
+    abbreviations: ["9-11 Commission"]
+    status: active
+    tier: 2
+  - canonical: "National Commission on the Cost of Higher Education"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Commission on the Future of the Navy"
+    abbreviations: ["NCFN"]
+    status: active
+    tier: 2
+  - canonical: "National Communications System"
+    abbreviations: ["NCS"]
+    status: active
+    tier: 2
+  - canonical: "National Consumer Cooperative Bank"
+    abbreviations: ["NCB"]
+    status: active
+    tier: 2
+  - canonical: "National Council on Disability"
+    abbreviations: ["NCD"]
+    status: active
+    tier: 2
+  - canonical: "National Counterintelligence Center"
+    abbreviations: ["NCTC"]
+    status: active
+    tier: 2
+  - canonical: "National Credit Union Administration"
+    abbreviations: ["NCUA"]
+    status: active
+    tier: 2
+  - canonical: "National Crime Prevention and Privacy Compact Council"
+    abbreviations: ["NCPPCC"]
+    status: active
+    tier: 2
+  - canonical: "National Economic Council"
+    abbreviations: ["NEC"]
+    status: active
+    tier: 2
+  - canonical: "National Education Goals Panel"
+    abbreviations: ["NEGP"]
+    status: active
+    tier: 2
+  - canonical: "National Endowment for the Arts"
+    abbreviations: ["NEA"]
+    status: active
+    tier: 2
+  - canonical: "National Endowment for the Humanities"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Foundation on the Arts and the Humanities"
+    abbreviations: ["ARTS"]
+    status: active
+    tier: 2
+  - canonical: "National Gambling Impact Study Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Geospatial-Intelligence Agency"
+    abbreviations: ["NGA"]
+    status: active
+    tier: 2
+  - canonical: "National Highway Traffic Safety Administration"
+    abbreviations: ["NHTSA"]
+    status: active
+    tier: 2
+  - canonical: "National Historical Publications and Records Commission"
+    abbreviations: ["NHPRC"]
+    status: active
+    tier: 2
+  - canonical: "National Indian Gaming Commission"
+    abbreviations: ["NIGC"]
+    status: active
+    tier: 2
+  - canonical: "National Institute for Literacy"
+    abbreviations: ["NIL"]
+    status: active
+    tier: 2
+  - canonical: "National Institute of Corrections"
+    abbreviations: ["NIC"]
+    status: active
+    tier: 2
+  - canonical: "National Institute of Food and Agriculture"
+    abbreviations: ["NIFA"]
+    status: active
+    tier: 2
+  - canonical: "National Institute of Justice"
+    abbreviations: ["NIJ"]
+    status: active
+    tier: 2
+  - canonical: "National Institute of Standards and Technology"
+    abbreviations: ["NIST"]
+    status: active
+    tier: 2
+  - canonical: "National Institutes of Health"
+    abbreviations: ["NIH"]
+    status: active
+    tier: 1
+  - canonical: "National Intelligence, Office of the National Director"
+    abbreviations: ["ODNI"]
+    status: active
+    tier: 2
+  - canonical: "National Labor Relations Board"
+    abbreviations: ["NLRB"]
+    status: active
+    tier: 1
+  - canonical: "National Library of Medicine"
+    abbreviations: ["NLM"]
+    status: active
+    tier: 2
+  - canonical: "National Mediation Board"
+    abbreviations: ["NMB"]
+    status: active
+    tier: 2
+  - canonical: "National Nanotechnology Coordination Office"
+    abbreviations: ["NNCO"]
+    status: active
+    tier: 2
+  - canonical: "National Nuclear Security Administration"
+    abbreviations: ["NNSA"]
+    status: active
+    tier: 2
+  - canonical: "National Oceanic and Atmospheric Administration"
+    abbreviations: ["NOAA"]
+    status: active
+    tier: 2
+  - canonical: "National Park Service"
+    abbreviations: ["NPS"]
+    status: active
+    tier: 2
+  - canonical: "National Partnership for Reinventing Government"
+    abbreviations: ["NPR"]
+    status: active
+    tier: 2
+  - canonical: "National Prison Rape Elimination Commission"
+    abbreviations: ["NPREC"]
+    status: active
+    tier: 2
+  - canonical: "National Railroad Passenger Corporation"
+    abbreviations: ["AMTRAK"]
+    status: active
+    tier: 2
+  - canonical: "National Science Foundation"
+    abbreviations: ["NSF"]
+    status: active
+    tier: 2
+  - canonical: "National Security Agency/Central Security Service"
+    abbreviations: ["NSA/CSS"]
+    status: active
+    tier: 1
+  - canonical: "National Security Commission on Artificial Intelligence"
+    abbreviations: ["NSCAI"]
+    status: active
+    tier: 2
+  - canonical: "National Security Council"
+    abbreviations: ["NSC"]
+    status: active
+    tier: 1
+  - canonical: "National Shipping Authority"
+    abbreviations: ["NSA"]
+    status: active
+    tier: 2
+  - canonical: "National Skill Standards Board"
+    abbreviations: ["NSSB"]
+    status: active
+    tier: 2
+  - canonical: "National Space Council"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "National Technical Information Service"
+    abbreviations: ["NTIS"]
+    status: active
+    tier: 2
+  - canonical: "National Telecommunications and Information Administration"
+    abbreviations: ["NTIA"]
+    status: active
+    tier: 2
+  - canonical: "National Transportation Safety Board"
+    abbreviations: ["NTSB"]
+    status: active
+    tier: 1
+  - canonical: "National Women's Business Council"
+    abbreviations: ["NWBC"]
+    status: active
+    tier: 2
+  - canonical: "Natural Resources Conservation Service"
+    abbreviations: ["NRCS"]
+    status: active
+    tier: 2
+  - canonical: "Natural Resources Revenue Office"
+    abbreviations: ["ONRR"]
+    status: active
+    tier: 2
+  - canonical: "Navajo and Hopi Indian Relocation Office"
+    abbreviations: ["ONHIR"]
+    status: active
+    tier: 2
+  - canonical: "Navy Department"
+    abbreviations: ["USN"]
+    status: active
+    tier: 2
+  - canonical: "Neighborhood Reinvestment Corporation"
+    abbreviations: ["NEIGHBOR"]
+    status: active
+    tier: 2
+  - canonical: "Northeast Dairy Compact Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Northeast Interstate Low-Level Radioactive Waste Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Northern Border Regional Commission"
+    abbreviations: ["NBRC"]
+    status: active
+    tier: 2
+  - canonical: "Nuclear Energy Office"
+    abbreviations: ["NE"]
+    status: active
+    tier: 2
+  - canonical: "Nuclear Regulatory Commission"
+    abbreviations: ["NRC"]
+    status: active
+    tier: 1
+  - canonical: "Nuclear Waste Technical Review Board"
+    abbreviations: ["NWTRB"]
+    status: active
+    tier: 2
+  - canonical: "Occupational Safety and Health Administration"
+    abbreviations: ["OSHA"]
+    status: active
+    tier: 1
+  - canonical: "Occupational Safety and Health Review Commission"
+    abbreviations: ["OSHRC"]
+    status: active
+    tier: 2
+  - canonical: "Ocean Energy Management Bureau"
+    abbreviations: ["BOEM"]
+    status: active
+    tier: 2
+  - canonical: "Ocean Energy Management, Regulation, and Enforcement Bureau"
+    abbreviations: ["BOEMRE"]
+    status: active
+    tier: 2
+  - canonical: "Ocean Policy Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Office of Government Information Services"
+    abbreviations: ["OGIS"]
+    status: active
+    tier: 2
+  - canonical: "Office of Motor Carrier Safety"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Office of National Drug Control Policy"
+    abbreviations: ["ONDCP"]
+    status: active
+    tier: 2
+  - canonical: "Office of Policy Development"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Office of the Chief Financial Officer, Agriculture Department"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Office of the National Cyber Director"
+    abbreviations: ["ONCD"]
+    status: active
+    tier: 2
+  - canonical: "Oklahoma City National Memorial Trust"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Operations Office"
+    abbreviations: ["OO"]
+    status: active
+    tier: 2
+  - canonical: "Ounce of Prevention Council"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Overseas Private Investment Corporation"
+    abbreviations: ["OPIC"]
+    status: active
+    tier: 2
+  - canonical: "Pacific Northwest Electric Power and Conservation Planning Council"
+    abbreviations: ["PACIFIC"]
+    status: active
+    tier: 2
+  - canonical: "Panama Canal Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Parole Commission"
+    abbreviations: ["USPC"]
+    status: active
+    tier: 2
+  - canonical: "Partnerships and Public Engagement Office"
+    abbreviations: ["OPPE"]
+    status: active
+    tier: 2
+  - canonical: "Patent and Trademark Office"
+    abbreviations: ["PTO"]
+    status: active
+    tier: 2
+  - canonical: "Peace Corps"
+    abbreviations: ["PC"]
+    status: active
+    tier: 2
+  - canonical: "Pension Benefit Guaranty Corporation"
+    abbreviations: ["PBGC"]
+    status: active
+    tier: 2
+  - canonical: "Pension and Welfare Benefits Administration"
+    abbreviations: ["PWBA"]
+    status: active
+    tier: 2
+  - canonical: "Personnel Management Office"
+    abbreviations: ["OPM"]
+    status: active
+    tier: 2
+  - canonical: "Physician Payment Review Commission"
+    abbreviations: ["PPRC"]
+    status: active
+    tier: 2
+  - canonical: "Pipeline and Hazardous Materials Safety Administration"
+    abbreviations: ["PHMSA"]
+    status: active
+    tier: 2
+  - canonical: "Postal Rate Commission"
+    abbreviations: ["PRC"]
+    status: active
+    tier: 2
+  - canonical: "Postal Regulatory Commission"
+    abbreviations: ["PRC"]
+    status: active
+    tier: 2
+  - canonical: "Postal Service"
+    abbreviations: ["USPS"]
+    status: active
+    tier: 2
+  - canonical: "President's Council on Integrity and Efficiency"
+    abbreviations: ["PCIE"]
+    status: active
+    tier: 2
+  - canonical: "President's Council on Sustainable Development"
+    abbreviations: ["PCSD"]
+    status: active
+    tier: 2
+  - canonical: "President's Critical Infrastructure Protection Board"
+    abbreviations: ["PCCIP"]
+    status: active
+    tier: 2
+  - canonical: "President's Economic Policy Advisory Board"
+    abbreviations: ["PERAB"]
+    status: active
+    tier: 2
+  - canonical: "Presidential Advisory Committee on Gulf War Veterans' Illnesses"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Presidential Commission on Assignment of Women in the Armed Forces"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Presidio Trust"
+    abbreviations: ["PT"]
+    status: active
+    tier: 2
+  - canonical: "Prisons Bureau"
+    abbreviations: ["BOP"]
+    status: active
+    tier: 2
+  - canonical: "Privacy and Civil Liberties Oversight Board"
+    abbreviations: ["PCLOB"]
+    status: active
+    tier: 2
+  - canonical: "Procurement and Property Management, Office of"
+    abbreviations: ["OPPM"]
+    status: active
+    tier: 2
+  - canonical: "Program Support Center"
+    abbreviations: ["PSC"]
+    status: active
+    tier: 2
+  - canonical: "Prospective Payment Assessment Commission"
+    abbreviations: ["ProPAC"]
+    status: active
+    tier: 2
+  - canonical: "Public Buildings Reform Board"
+    abbreviations: ["PBRB"]
+    status: active
+    tier: 2
+  - canonical: "Public Debt Bureau"
+    abbreviations: ["BPD"]
+    status: active
+    tier: 2
+  - canonical: "Public Health Service"
+    abbreviations: ["PHS"]
+    status: active
+    tier: 2
+  - canonical: "Railroad Retirement Board"
+    abbreviations: ["RRB"]
+    status: active
+    tier: 2
+  - canonical: "Reagan-Udall Foundation for the Food and Drug Administration"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Reclamation Bureau"
+    abbreviations: ["BOR"]
+    status: active
+    tier: 2
+  - canonical: "Recovery Accountability and Transparency Board"
+    abbreviations: ["RATB"]
+    status: active
+    tier: 2
+  - canonical: "Refugee Resettlement Office"
+    abbreviations: ["ORR"]
+    status: active
+    tier: 2
+  - canonical: "Regulatory Information Service Center"
+    abbreviations: ["RISC"]
+    status: active
+    tier: 2
+  - canonical: "Research and Innovative Technology Administration"
+    abbreviations: ["RITA"]
+    status: active
+    tier: 2
+  - canonical: "Research and Special Programs Administration"
+    abbreviations: ["RSPA"]
+    status: active
+    tier: 2
+  - canonical: "Resolution Trust Corporation"
+    abbreviations: ["RTC"]
+    status: active
+    tier: 2
+  - canonical: "Risk Management Agency"
+    abbreviations: ["RMA"]
+    status: active
+    tier: 2
+  - canonical: "Rural Business-Cooperative Service"
+    abbreviations: ["RBS"]
+    status: active
+    tier: 2
+  - canonical: "Rural Housing Service"
+    abbreviations: ["RHS"]
+    status: active
+    tier: 2
+  - canonical: "Rural Housing and Community Development Service"
+    abbreviations: ["RHCDS"]
+    status: active
+    tier: 2
+  - canonical: "Rural Telephone Bank"
+    abbreviations: ["RTB"]
+    status: active
+    tier: 2
+  - canonical: "Rural Utilities Service"
+    abbreviations: ["RUS"]
+    status: active
+    tier: 2
+  - canonical: "Safety and Environmental Enforcement Bureau"
+    abbreviations: ["BSEE"]
+    status: active
+    tier: 2
+  - canonical: "Saint Lawrence Seaway Development Corporation"
+    abbreviations: ["SLSDC"]
+    status: active
+    tier: 2
+  - canonical: "Science and Technology Policy Office"
+    abbreviations: ["OSTP"]
+    status: active
+    tier: 2
+  - canonical: "Secret Service"
+    abbreviations: ["USSS"]
+    status: active
+    tier: 1
+  - canonical: "Securities and Exchange Commission"
+    abbreviations: ["SEC"]
+    status: active
+    tier: 1
+  - canonical: "Selective Service System"
+    abbreviations: ["SSS"]
+    status: active
+    tier: 2
+  - canonical: "Small Business Administration"
+    abbreviations: ["SBA"]
+    status: active
+    tier: 2
+  - canonical: "Smithsonian Institution"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Social Security Administration"
+    abbreviations: ["SSA"]
+    status: active
+    tier: 1
+  - canonical: "Southeastern Power Administration"
+    abbreviations: ["SEPA"]
+    status: active
+    tier: 2
+  - canonical: "Southwestern Power Administration"
+    abbreviations: ["SWPA"]
+    status: active
+    tier: 2
+  - canonical: "Special Counsel Office"
+    abbreviations: ["OSC"]
+    status: active
+    tier: 2
+  - canonical: "Special Inspector General For Iraq Reconstruction"
+    abbreviations: ["SIGIR"]
+    status: active
+    tier: 2
+  - canonical: "Special Inspector General for Afghanistan Reconstruction"
+    abbreviations: ["SIGAR"]
+    status: active
+    tier: 2
+  - canonical: "Special Trustee for American Indians Office"
+    abbreviations: ["OST"]
+    status: active
+    tier: 2
+  - canonical: "State Department"
+    abbreviations: ["DOS", "Department of State", "U.S. Department of State"]
+    status: active
+    tier: 1
+    note: "AP style: State Department on first reference."
+  - canonical: "State Justice Institute"
+    abbreviations: ["SJI"]
+    status: active
+    tier: 2
+  - canonical: "Strategic Preparedness and Response Administration"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Substance Abuse and Mental Health Services Administration"
+    abbreviations: ["SAMHSA"]
+    status: active
+    tier: 2
+  - canonical: "Surface Mining Reclamation and Enforcement Office"
+    abbreviations: ["OSM"]
+    status: active
+    tier: 2
+  - canonical: "Surface Transportation Board"
+    abbreviations: ["STB"]
+    status: active
+    tier: 2
+  - canonical: "Susquehanna River Basin Commission"
+    abbreviations: ["SRBC"]
+    status: active
+    tier: 2
+  - canonical: "Technology Administration"
+    abbreviations: ["TA"]
+    status: active
+    tier: 2
+  - canonical: "Tennessee Valley Authority"
+    abbreviations: ["TVA"]
+    status: active
+    tier: 2
+  - canonical: "The White House Office"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Thrift Depositor Protection Oversight Board"
+    abbreviations: ["TDPOB"]
+    status: active
+    tier: 2
+  - canonical: "Thrift Supervision Office"
+    abbreviations: ["OTS"]
+    status: active
+    tier: 2
+  - canonical: "Trade Representative, Office of United States"
+    abbreviations: ["USTR"]
+    status: active
+    tier: 2
+  - canonical: "Trade and Development Agency"
+    abbreviations: ["USTDA"]
+    status: active
+    tier: 2
+  - canonical: "Transportation Department"
+    abbreviations: ["DOT", "Department of Transportation", "U.S. Department of Transportation"]
+    status: active
+    tier: 1
+    note: "AP style: Transportation Department on first reference. DOT acceptable on second reference."
+  - canonical: "Transportation Office"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Transportation Security Administration"
+    abbreviations: ["TSA"]
+    status: active
+    tier: 1
+  - canonical: "Transportation Statistics Bureau"
+    abbreviations: ["BTS"]
+    status: active
+    tier: 2
+  - canonical: "Travel and Tourism Administration"
+    abbreviations: ["USTTA"]
+    status: active
+    tier: 2
+  - canonical: "Treasury Department"
+    abbreviations: ["TREAS", "Department of the Treasury", "U.S. Department of the Treasury"]
+    status: active
+    tier: 1
+    note: "AP style: Treasury Department on first reference."
+  - canonical: "Twenty-First Century Workforce Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "U.S. Citizenship and Immigration Services"
+    abbreviations: ["USCIS"]
+    status: active
+    tier: 2
+  - canonical: "U.S. Codex Office"
+    abbreviations: ["CODEX"]
+    status: active
+    tier: 2
+  - canonical: "U.S. Committee on the Marine Transportation System"
+    abbreviations: ["CMTS"]
+    status: active
+    tier: 2
+  - canonical: "U.S. Customs and Border Protection"
+    abbreviations: ["USCBP"]
+    status: active
+    tier: 2
+  - canonical: "U.S. House of Representatives"
+    abbreviations: ["HOUSE"]
+    status: active
+    tier: 2
+  - canonical: "U.S. Immigration and Customs Enforcement"
+    abbreviations: ["ICE"]
+    status: active
+    tier: 1
+  - canonical: "U.S. International Development Finance Corporation"
+    abbreviations: ["DFC"]
+    status: active
+    tier: 2
+  - canonical: "U.S. Trade Deficit Review Commission"
+    abbreviations: ["TDRC"]
+    status: active
+    tier: 2
+  - canonical: "U.S.-China Economic and Security Review Commission"
+    abbreviations: ["USCC"]
+    status: active
+    tier: 2
+  - canonical: "Under-Secretary for Economic Affairs"
+    abbreviations: ["OUSEA"]
+    status: active
+    tier: 2
+  - canonical: "Unified Carrier Registration Plan"
+    abbreviations: ["UCR"]
+    status: active
+    tier: 2
+  - canonical: "Uniformed Services University of the Health Sciences"
+    abbreviations: ["USUHS"]
+    status: active
+    tier: 2
+  - canonical: "United States African Development Foundation"
+    abbreviations: ["USADF"]
+    status: active
+    tier: 2
+  - canonical: "United States Agency for Global Media"
+    abbreviations: ["USAGM"]
+    status: active
+    tier: 2
+  - canonical: "United States Enrichment Corporation"
+    abbreviations: ["USEC"]
+    status: active
+    tier: 2
+  - canonical: "United States Information Agency"
+    abbreviations: ["USIA"]
+    status: active
+    tier: 2
+  - canonical: "United States Institute of Peace"
+    abbreviations: ["USIP"]
+    status: active
+    tier: 2
+  - canonical: "United States Marshals Service"
+    abbreviations: ["USMS"]
+    status: active
+    tier: 2
+  - canonical: "United States Mint"
+    abbreviations: ["USMINT"]
+    status: active
+    tier: 2
+  - canonical: "United States Olympic and Paralympic Committee"
+    abbreviations: ["USOPC"]
+    status: active
+    tier: 2
+  - canonical: "United States Sentencing Commission"
+    abbreviations: ["USSC"]
+    status: active
+    tier: 2
+  - canonical: "Utah Reclamation Mitigation and Conservation Commission"
+    abbreviations: ["URMCC"]
+    status: active
+    tier: 2
+  - canonical: "Valles Caldera Trust"
+    abbreviations: ["VCNP"]
+    status: active
+    tier: 2
+  - canonical: "Department of Veterans Affairs"
+    abbreviations: ["VA", "Veterans Affairs Department", "U.S. Department of Veterans Affairs"]
+    note: "AP style exception: Department of Veterans Affairs on first reference. VA acceptable on second reference."
+    status: active
+    tier: 1
+  - canonical: "Veterans Employment and Training Service"
+    abbreviations: ["VETS"]
+    status: active
+    tier: 2
+  - canonical: "Victims of Crime Office"
+    abbreviations: ["OVC"]
+    status: active
+    tier: 2
+  - canonical: "Wage and Hour Division"
+    abbreviations: ["WHD"]
+    status: active
+    tier: 2
+  - canonical: "Western Area Power Administration"
+    abbreviations: ["WAPA"]
+    status: active
+    tier: 2
+  - canonical: "Women's Business Enterprise Interagency Committee"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Women's Progress Commemoration Commission"
+    abbreviations: []
+    status: active
+    tier: 2
+  - canonical: "Women's Suffrage Centennial Commission"
+    abbreviations: ["WSCC"]
+    status: active
+    tier: 2
+  - canonical: "Workers' Compensation Programs Office"
+    abbreviations: ["OWCP"]
+    status: active
+    tier: 2
+
+  # -----------------------------------------------------------------------
+  # Restructured or eliminated agencies — manually curated
+  # -----------------------------------------------------------------------
+
+  - canonical: "U.S. Agency for International Development"
+    abbreviations: ["USAID"]
+    status: eliminated
+    tier: 1
+    note: "Shut down in 2025. Functions transferred to State Department."
+
+  - canonical: "Department of Education"
+    abbreviations: ["ED", "DOE"]
+    status: restructured
+    tier: 2
+    note: "Targeted for elimination in 2025. Status uncertain — verify current name and scope."
+
+  - canonical: "Department of Government Efficiency"
+    abbreviations: ["DOGE"]
+    status: active
+    tier: 1
+    note: "Advisory body, not a formal federal agency. Flag if described as a department."
+
+  - canonical: "Consumer Financial Protection Bureau"
+    abbreviations: ["CFPB"]
+    status: restructured
+    tier: 1
+    note: "Operations significantly curtailed in 2025. Verify current status before publishing."
+
+  - canonical: "Federal Emergency Management Agency"
+    abbreviations: ["FEMA"]
+    status: restructured
+    tier: 1
+    note: "Proposed for elimination/transfer to DHS direct control in 2025. Verify current status."
+
+  - canonical: "National Oceanic and Atmospheric Administration"
+    abbreviations: ["NOAA"]
+    status: restructured
+    tier: 2
+    note: "Subject to significant staff and program cuts in 2025. Verify current scope."
+
+  - canonical: "Office of Personnel Management"
+    abbreviations: ["OPM"]
+    status: restructured
+    tier: 1
+    note: "Proposed for merger with OMB in 2025. Verify current structure."
+
+  - canonical: "Broadcasting Board of Governors"
+    abbreviations: ["BBG"]
+    status: restructured
+    tier: 2
+    formerly: "U.S. Agency for Global Media"
+    note: "Renamed to U.S. Agency for Global Media (USAGM). BBG is the former name."
+
+  - canonical: "U.S. Agency for Global Media"
+    abbreviations: ["USAGM"]
+    status: restructured
+    tier: 1
+    note: "Targeted for elimination in 2025. Verify current status."
