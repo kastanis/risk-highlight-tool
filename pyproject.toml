@@ -1,3 +1,7 @@
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["risk_highlight*"]
+
 [project]
 name = "risk-highlight-tool"
 version = "0.1.0"
