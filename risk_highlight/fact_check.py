@@ -124,3 +124,84 @@ def fact_check_claim(claim_text: str, context: str, source_url: str = "") -> Fac
         source=parsed.get("source", source_url),
         authoritative_value=parsed.get("authoritative_value", ""),
     )
+
+
+OPEN_CLAIM_SYSTEM_PROMPT = """\
+You are a journalism fact-checker. Given a specific claim from a news article and \
+an editorial concern about it, search for authoritative information to verify whether \
+the claim is accurate.
+
+You MUST use primary sources. Prioritize:
+1. Official records, databases, or government sources
+2. Academic or peer-reviewed sources
+3. The original source material being referenced (e.g. IMDb for film facts, official bios for roles)
+4. News organizations only as a last resort
+
+Do NOT rationalize or reconcile discrepancies. If facts differ, report the discrepancy.
+
+Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
+{
+  "verdict": "confirmed" | "discrepancy" | "unverifiable",
+  "explanation": "One or two sentences explaining what you found.",
+  "authoritative_value": "What the authoritative source actually says, or empty string if unverifiable.",
+  "source": "URL of the source you used, or empty string."
+}
+"""
+
+
+def verify_open_concern(phrase: str, concern: str, context: str) -> FactCheckResult:
+    """
+    Verify a free-form editorial concern from open review via web search.
+
+    Args:
+        phrase: the specific text span flagged by open review
+        concern: the editorial concern to investigate
+        context: the full article text for context
+    """
+    import json
+    from openai import OpenAI
+
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    user_prompt = (
+        f'Claim from article: "{phrase}"\n'
+        f'Editorial concern: {concern}\n'
+        f'Full context: "{context[:500]}"\n\n'
+        f'Search for authoritative information to verify whether this claim is accurate.'
+    )
+
+    response = client.responses.create(
+        model="gpt-4o",
+        tools=[{"type": "web_search_preview"}],
+        input=[
+            {"role": "system", "content": OPEN_CLAIM_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+
+    raw = response.output_text or "{}"
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return FactCheckResult(
+            claim=phrase,
+            verdict="unverifiable",
+            explanation="Could not parse verification response.",
+            source="",
+            authoritative_value="",
+        )
+
+    return FactCheckResult(
+        claim=phrase,
+        verdict=parsed.get("verdict", "unverifiable"),
+        explanation=parsed.get("explanation", ""),
+        source=parsed.get("source", ""),
+        authoritative_value=parsed.get("authoritative_value", ""),
+    )

@@ -19,7 +19,7 @@ from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
 from risk_highlight.ai_check import run_ai_check, open_review  # noqa: E402
-from risk_highlight.fact_check import fact_check_claim  # noqa: E402
+from risk_highlight.fact_check import fact_check_claim, verify_open_concern  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -302,17 +302,43 @@ if st.session_state.get("or_enabled") and text.strip():
 
         concerns = or_result.get("concerns", [])
         if concerns:
-            for c in concerns:
-                phrase = c.get("text", "").replace("$", r"\$")
-                concern = c.get("concern", "").replace("$", r"\$")
+            for ci, c in enumerate(concerns):
+                phrase = c.get("text", "")
+                concern = c.get("concern", "")
                 st.markdown(
                     f"<div style='border-left:3px solid #7950f2;padding:6px 12px;margin:6px 0;"
                     f"background:#f8f0ff;border-radius:0 4px 4px 0'>"
-                    f"<span style='font-family:monospace;font-size:12px;color:#333'>\"{phrase}\"</span><br>"
-                    f"<span style='font-size:13px;color:#444'>{concern}</span>"
+                    f"<span style='font-family:monospace;font-size:12px;color:#333'>\"{phrase.replace('$', r'\\$')}\"</span><br>"
+                    f"<span style='font-size:13px;color:#444'>{concern.replace('$', r'\\$')}</span>"
                     f"</div>",
                     unsafe_allow_html=True,
                 )
+                if st.button("Verify", key=f"or_verify_{ci}", type="secondary"):
+                    with st.spinner("Searching…"):
+                        try:
+                            vc = verify_open_concern(phrase, concern, text)
+                            st.session_state[f"or_verify_result_{ci}"] = vc
+                        except Exception as e:
+                            st.session_state[f"or_verify_result_{ci}"] = None
+                            st.error(f"Verification failed: {e}")
+
+                vc = st.session_state.get(f"or_verify_result_{ci}")
+                if vc:
+                    verdict_color = {
+                        "confirmed": "#2f9e44",
+                        "discrepancy": "#e03131",
+                        "unverifiable": "#868e96",
+                    }.get(vc.verdict, "#868e96")
+                    st.markdown(
+                        f"<span style='background:{verdict_color};color:#fff;padding:2px 8px;"
+                        f"border-radius:4px;font-weight:bold;font-size:12px'>{vc.verdict.upper()}</span>",
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(f"{vc.explanation.replace('$', r'\\$')}")
+                    if vc.authoritative_value:
+                        st.caption(f"Found: {vc.authoritative_value.replace('$', r'\\$')}")
+                    if vc.source:
+                        st.caption(f"Source: {vc.source}")
         else:
             st.success("No editorial concerns identified.")
 
