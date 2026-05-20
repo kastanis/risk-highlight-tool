@@ -234,7 +234,7 @@ _AGENCY_ABBR_STRINGS = [t[0] for t in _AGENCY_ABBR]
 
 # Thresholds: abbreviations need higher score (short strings are noisy at low thresholds)
 _ABBR_THRESHOLD = 85
-_FULL_THRESHOLD = 88
+_FULL_THRESHOLD = 95
 
 
 def _flag_agencies(text: str) -> list[Flag]:
