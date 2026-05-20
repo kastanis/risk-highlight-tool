@@ -284,7 +284,11 @@ if st.session_state.get("ai_enabled") and text.strip():
             st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
 
 # --- Fact checker ---
-quant_flags = [f for f in flags if f.flag_type == "quantitative_claim"] if flags else []
+_VAGUE_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "half"}
+quant_flags = [
+    f for f in flags
+    if f.flag_type == "quantitative_claim" and f.text.lower().strip() not in _VAGUE_WORDS
+] if flags else []
 if quant_flags and text.strip():
     st.divider()
     st.subheader("Fact checker")
