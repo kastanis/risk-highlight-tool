@@ -23,6 +23,37 @@ from risk_highlight.fact_check import fact_check_claim, verify_open_concern  # n
 
 
 # ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _safe(text: str) -> str:
+    """Escape characters that break Streamlit markdown rendering."""
+    return text.replace("$", r"\$").replace("%", r"\%")
+
+
+VERDICT_LABEL = {
+    "confirmed":    ("Appears supported",  "#2f9e44"),
+    "discrepancy":  ("Discrepancy found",  "#e03131"),
+    "unverifiable": ("Could not verify",   "#868e96"),
+}
+
+
+def _render_verdict(result) -> None:
+    label, color = VERDICT_LABEL.get(result.verdict, ("Unknown", "#868e96"))
+    st.markdown(
+        f"<div style='margin-top:6px'>"
+        f"<span style='background:{color};color:#fff;padding:3px 10px;"
+        f"border-radius:4px;font-weight:bold;font-size:13px'>{label}</span></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(_safe(result.explanation))
+    if result.authoritative_value:
+        st.caption(f"Found: {_safe(result.authoritative_value)}")
+    if result.source:
+        st.caption(f"Source: {result.source}")
+
+
+# ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
 
@@ -308,8 +339,8 @@ if st.session_state.get("or_enabled") and text.strip():
                 st.markdown(
                     f"<div style='border-left:3px solid #7950f2;padding:6px 12px;margin:6px 0;"
                     f"background:#f8f0ff;border-radius:0 4px 4px 0'>"
-                    f"<span style='font-family:monospace;font-size:12px;color:#333'>\"{phrase.replace('$', r'\\$')}\"</span><br>"
-                    f"<span style='font-size:13px;color:#444'>{concern.replace('$', r'\\$')}</span>"
+                    f"<span style='font-family:monospace;font-size:12px;color:#333'>\"{html.escape(_safe(phrase))}\"</span><br>"
+                    f"<span style='font-size:13px;color:#444'>{html.escape(_safe(concern))}</span>"
                     f"</div>",
                     unsafe_allow_html=True,
                 )
@@ -324,21 +355,7 @@ if st.session_state.get("or_enabled") and text.strip():
 
                 vc = st.session_state.get(f"or_verify_result_{ci}")
                 if vc:
-                    verdict_color = {
-                        "confirmed": "#2f9e44",
-                        "discrepancy": "#e03131",
-                        "unverifiable": "#868e96",
-                    }.get(vc.verdict, "#868e96")
-                    st.markdown(
-                        f"<span style='background:{verdict_color};color:#fff;padding:2px 8px;"
-                        f"border-radius:4px;font-weight:bold;font-size:12px'>{vc.verdict.upper()}</span>",
-                        unsafe_allow_html=True,
-                    )
-                    st.markdown(f"{vc.explanation.replace('$', r'\\$')}")
-                    if vc.authoritative_value:
-                        st.caption(f"Found: {vc.authoritative_value.replace('$', r'\\$')}")
-                    if vc.source:
-                        st.caption(f"Source: {vc.source}")
+                    _render_verdict(vc)
         else:
             st.success("No editorial concerns identified.")
 
@@ -374,24 +391,7 @@ if quant_flags and text.strip():
 
             fc = st.session_state.get(f"fc_result_{i}")
             if fc:
-                verdict_color = {
-                    "confirmed": "#2f9e44",
-                    "discrepancy": "#e03131",
-                    "unverifiable": "#868e96",
-                }.get(fc.verdict, "#868e96")
-
-                st.markdown(
-                    f"<div style='margin-top:8px'>"
-                    f"<span style='background:{verdict_color};color:#fff;padding:3px 10px;"
-                    f"border-radius:4px;font-weight:bold;font-size:13px'>"
-                    f"{fc.verdict.upper()}</span></div>",
-                    unsafe_allow_html=True,
-                )
-                st.markdown(f"**{fc.explanation.replace('$', r'\\$')}**")
-                if fc.authoritative_value:
-                    st.caption(f"Authoritative figure: {fc.authoritative_value.replace('$', r'\\$')}")
-                if fc.source:
-                    st.caption(f"Source: {fc.source}")
+                _render_verdict(fc)
 
 # --- Sidebar ---
 with st.sidebar:

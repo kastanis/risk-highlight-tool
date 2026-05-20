@@ -85,16 +85,21 @@ def run_ai_check(text: str, tool_flags: list) -> AIResult:
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    response = client.chat.completions.create(
+    response = client.responses.create(
         model="gpt-4o",
-        temperature=0,
-        messages=[
+        tools=[{"type": "web_search_preview"}],
+        input=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": text},
         ],
-        response_format={"type": "json_object"},
     )
-    raw = response.choices[0].message.content or "{}"
+    raw = response.output_text or "{}"
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
     parsed = json.loads(raw)
 
     flagged = bool(parsed.get("flag", False))
