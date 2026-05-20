@@ -27,7 +27,13 @@
 #    - RAID benchmark (2024) arxiv.org/abs/2405.07940
 #    - GPTZero research: gptzero.me/research
 
-patterns: []
+patterns:
+  # Known wrong-word agency misspellings — fuzzy matching cannot catch these
+  # because the substituted word is a valid English word (not a typo).
+  - flag_type: agency_name
+    priority: High
+    reason: "Misspelling — correct name is U.S. Customs and Border Protection (not Patrol)"
+    pattern: "\\bCustoms and Border Patrol\\b"
 
 # ── Activate by moving entries above "patterns: []" ─────────────────────────
 

@@ -237,20 +237,32 @@ _ABBR_THRESHOLD = 85
 _FULL_THRESHOLD = 93
 
 
+def _ngram_windows(words: list[tuple[int, int, str]], min_w: int = 2, max_w: int = 8):
+    """Yield (char_start, char_end, span_text) for every word n-gram window."""
+    n = len(words)
+    for i in range(n):
+        for w in range(min_w, min(max_w + 1, n - i + 1)):
+            chunk = words[i:i + w]
+            start = chunk[0][0]
+            end = chunk[-1][1]
+            span = " ".join(t for _, _, t in chunk)
+            yield start, end, span
+
+
 def _flag_agencies(text: str) -> list[Flag]:
     """
     Finds agency mentions in text using two-pass fuzzy matching:
-    - Short all-caps tokens → matched against abbreviation list
-    - Longer spans (via spaCy ORG entities) → matched against full name list
+    - Pass 1: short all-caps tokens → matched against abbreviation list
+    - Pass 2: sliding n-gram windows (2-8 words) → matched against full name list
+              (replaces spaCy ORG entities — more reliable for partial/misspelled names)
 
-    Only flags near-misses (close but not exact). Exact matches pass clean.
+    Only flags near-misses and restructured/eliminated exact matches.
+    Exact active matches pass clean.
     """
     if not _AGENCY_FULL and not _AGENCY_ABBR:
         return []
 
     flags = []
-    nlp = load_nlp()
-    doc = nlp(text)
 
     # Pass 1: abbreviation matching on short all-caps tokens
     abbr_pattern = re.compile(r'\b[A-Z]{2,8}\b')
@@ -266,7 +278,7 @@ def _flag_agencies(text: str) -> list[Flag]:
             _, canonical, status = _AGENCY_ABBR[idx]
             is_exact = token == match_str
             if is_exact and status == "active":
-                continue  # exact match to active agency — no flag
+                continue
             if is_exact and status in ("restructured", "eliminated"):
                 reason = f"Agency status uncertain — {canonical} has been {status}. Verify before publishing."
             else:
@@ -276,37 +288,62 @@ def _flag_agencies(text: str) -> list[Flag]:
                 flag_type="agency_name", priority="High", reason=reason
             ))
 
-    # Pass 2: full name matching on spaCy ORG entities
-    for ent in doc.ents:
-        if ent.label_ != "ORG":
-            continue
-        span = ent.text.strip()
-        # Strip leading "the"/"The" — spaCy often includes it in ORG spans
+    # Pass 2: n-gram window matching against full agency name list
+    if not _AGENCY_FULL_STRINGS:
+        return flags
+
+    # Tokenize into (char_start, char_end, word) tuples, skipping punctuation-only tokens
+    word_tokens = []
+    for m in re.finditer(r'\b\w+(?:[.\'-]\w+)*\b', text):
+        word_tokens.append((m.start(), m.end(), m.group()))
+
+    seen_spans: set[tuple[int, int]] = set()
+
+    for char_start, char_end, span in _ngram_windows(word_tokens):
+        # Normalise: strip leading "the"/"The" and "U.S."
         span_norm = re.sub(r'^[Tt]he\s+', '', span)
         span_norm = re.sub(r'^U\.S\.\s+', '', span_norm)
-        if len(span_norm) < 6:  # too short for reliable full-name matching
+        span_norm = span_norm.strip()
+
+        if len(span_norm) < 8:
             continue
-        if not _AGENCY_FULL_STRINGS:
-            continue
-        result = process.extractOne(span_norm, _AGENCY_FULL_STRINGS, scorer=fuzz.token_sort_ratio)
+
+        result = process.extractOne(
+            span_norm, _AGENCY_FULL_STRINGS,
+            scorer=fuzz.token_sort_ratio,
+            score_cutoff=_FULL_THRESHOLD,
+        )
         if result is None:
             continue
-        match_str, score, idx = result
-        if score >= _FULL_THRESHOLD:
-            match_str_val, canonical, status = _AGENCY_FULL[idx]
-            # Exact if span matches the canonical name OR any known alternate (match_str_val)
-            is_exact = (span_norm.lower() == canonical.lower()
-                        or span_norm.lower() == match_str_val.lower())
-            if is_exact and status == "active":
-                continue
-            if is_exact and status in ("restructured", "eliminated"):
-                reason = f"Agency status uncertain — {canonical} has been {status}. Verify before publishing."
-            else:
-                reason = f"Near-match to \"{canonical}\" ({score}% match) — verify agency name"
-            flags.append(Flag(
-                start=ent.start_char, end=ent.end_char, text=ent.text,
-                flag_type="agency_name", priority="High", reason=reason
-            ))
+
+        match_str_val, score, idx = result
+        _, canonical, status = _AGENCY_FULL[idx]
+
+        is_exact = (span_norm.lower() == canonical.lower()
+                    or span_norm.lower() == match_str_val.lower())
+        if is_exact and status == "active":
+            continue
+
+        # Deduplicate: skip if we already flagged an overlapping span
+        key = (char_start, char_end)
+        if key in seen_spans:
+            continue
+
+        # Keep only the highest-scoring window for overlapping char ranges
+        overlaps = [k for k in seen_spans if k[0] < char_end and k[1] > char_start]
+        if overlaps:
+            continue
+        seen_spans.add(key)
+
+        if is_exact and status in ("restructured", "eliminated"):
+            reason = f"Agency status uncertain — {canonical} has been {status}. Verify before publishing."
+        else:
+            reason = f"Near-match to \"{canonical}\" ({score:.0f}% match) — verify agency name"
+
+        flags.append(Flag(
+            start=char_start, end=char_end, text=text[char_start:char_end],
+            flag_type="agency_name", priority="High", reason=reason
+        ))
 
     return flags
 

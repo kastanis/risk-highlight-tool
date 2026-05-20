@@ -1791,9 +1791,9 @@ agencies:
     status: active
     tier: 2
   - canonical: "U.S. Customs and Border Protection"
-    abbreviations: ["USCBP"]
+    abbreviations: ["CBP", "USCBP", "Customs and Border Protection"]
     status: active
-    tier: 2
+    tier: 1
   - canonical: "U.S. House of Representatives"
     abbreviations: ["HOUSE"]
     status: active
