@@ -283,6 +283,7 @@ def _flag_agencies(text: str) -> list[Flag]:
         span = ent.text.strip()
         # Strip leading "the"/"The" — spaCy often includes it in ORG spans
         span_norm = re.sub(r'^[Tt]he\s+', '', span)
+        span_norm = re.sub(r'^U\.S\.\s+', '', span_norm)
         if len(span_norm) < 6:  # too short for reliable full-name matching
             continue
         if not _AGENCY_FULL_STRINGS:
