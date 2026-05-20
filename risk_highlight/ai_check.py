@@ -209,16 +209,21 @@ def open_review(text: str) -> dict:
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    response = client.chat.completions.create(
+    response = client.responses.create(
         model="gpt-4o",
-        temperature=0,
-        messages=[
+        tools=[{"type": "web_search_preview"}],
+        input=[
             {"role": "system", "content": OPEN_REVIEW_PROMPT},
             {"role": "user", "content": text},
         ],
-        response_format={"type": "json_object"},
     )
-    raw = response.choices[0].message.content or "{}"
+    raw = response.output_text or "{}"
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
