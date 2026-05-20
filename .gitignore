@@ -16,3 +16,8 @@ scratch/*
 !scratch/.gitkeep
 
 test-docs/
+
+# Generated evaluation output — run the scripts to reproduce
+evaluation/benchmark/results.csv
+evaluation/benchmark/scored.csv
+evaluation/benchmark/scores_summary.txt
