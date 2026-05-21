@@ -379,21 +379,16 @@ if quant_flags and text.strip():
     st.divider()
     st.subheader("Fact checker")
     st.caption(
-        "Verify specific figures against a source URL or via web search. "
+        "Searches the web to verify specific figures against authoritative sources. "
         "Results cite the source used — always confirm before publishing."
     )
 
     for i, f in enumerate(quant_flags):
         with st.expander(f'"{f.text}"', expanded=False):
-            source_url = st.text_input(
-                "Source URL (optional — leave blank to search the web)",
-                key=f"fc_url_{i}",
-                placeholder="https://...",
-            )
             if st.button("Verify this figure", key=f"fc_btn_{i}", type="primary"):
                 with st.spinner("Searching…"):
                     try:
-                        fc = fact_check_claim(f.text, text, source_url.strip())
+                        fc = fact_check_claim(f.text, text)
                         st.session_state[f"fc_result_{i}"] = fc
                     except Exception as e:
                         st.session_state[f"fc_result_{i}"] = None
