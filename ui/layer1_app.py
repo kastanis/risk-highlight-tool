@@ -155,6 +155,14 @@ with col_input:
     )
     st.button("Check for risk flags", type="primary", use_container_width=True)
 
+# Auto-clear all AI/fact-check results when text changes.
+_text_hash = hash(text)
+if st.session_state.get("_text_hash") != _text_hash:
+    for key in list(st.session_state.keys()):
+        if key.startswith(("ai_result", "or_result", "fc_result_", "or_verify_result_")):
+            del st.session_state[key]
+    st.session_state["_text_hash"] = _text_hash
+
 # Run flagging. Sidebar checkbox state is available via session_state with
 # default=True on first render, so filtering is safe before the sidebar block runs.
 flags = flag_text(text) if text.strip() else []
@@ -428,7 +436,8 @@ with st.sidebar:
 
     st.divider()
     st.header("Full AI review")
-    st.caption("Identifies and verifies all claims in one pass — figures, titles, dates, rankings, and more.")
+    st.caption("(In progress) Identify and verify all claims in one pass — figures, titles, dates, rankings, and more. "
+               "NOTE: LLM relying on stale training information.")
     or_enabled = st.toggle("Enable full AI review", key="or_enabled")
     if or_enabled:
         import os
