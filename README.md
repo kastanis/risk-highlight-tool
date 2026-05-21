@@ -65,14 +65,15 @@ uv run pytest tests/
 ## Repo structure
 
 ```
-risk_highlight/        # Shared flagging logic (layer1.py, ai_check.py, fact_check.py)
-ui/                    # Streamlit apps, one per layer
-tests/                 # Smoke tests for Layer 1
+risk_highlight/        # Core logic — layer1.py, ai_check.py, fact_check.py
+ui/layer1_app.py       # Streamlit app
+tests/                 # Layer 1 tests
 evaluation/
-  gold/                # Hand-labeled test sets
-  benchmark/           # Benchmark scripts and snippets
+  gold/                # Hand-labeled test set (layer1_gold.jsonl)
+  benchmark/           # Benchmark scripts and results
 data/
-  agencies/            # federal_agencies.yaml — 479 agencies with AP style canonicals
-  patterns/            # layer1_patterns.yaml — extend Layer 1 without code changes
-docs/                  # Active reference docs
+  agencies/            # federal_agencies.yaml — 479 agencies, AP style canonicals
+  patterns/            # layer1_patterns.yaml — add patterns without code changes
+docs/                  # PATTERN_SOURCES.md, EVALUATION_PLAN_L1.md, LAYER1_CHANGELOG.md
+analysis/              # layer1_copy_risk.ipynb — exploratory analysis
 ```

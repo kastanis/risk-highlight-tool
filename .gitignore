@@ -1,6 +1,8 @@
 *.vim
 .env
 ui/archive/
+__pycache__/
+*.pyc
 .Renviron
 .venv
 .quarto
