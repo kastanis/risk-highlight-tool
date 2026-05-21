@@ -18,8 +18,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
-from risk_highlight.ai_check import run_ai_check, open_review  # noqa: E402
-from risk_highlight.fact_check import fact_check_claim, verify_open_concern  # noqa: E402
+from risk_highlight.ai_check import run_ai_check, full_review  # noqa: E402
+from risk_highlight.fact_check import fact_check_claim  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -314,48 +314,50 @@ if st.session_state.get("ai_enabled") and text.strip():
             st.markdown("**Flag types found by tool but not AI:**")
             st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
 
-# --- Open review ---
+# --- Full AI review ---
 if st.session_state.get("or_enabled") and text.strip():
     if st.session_state.get("run_or"):
-        with st.spinner("Reviewing…"):
+        with st.spinner("Reviewing and verifying claims…"):
             try:
-                or_result = open_review(text)
+                or_result = full_review(text)
                 st.session_state["or_result"] = or_result
             except Exception as e:
                 st.session_state["or_result"] = None
-                st.error(f"Open review failed: {e}")
+                st.error(f"Full AI review failed: {e}")
 
     or_result = st.session_state.get("or_result")
     if or_result:
         st.divider()
-        st.subheader("Open review (GPT-4o)")
+        st.subheader("Full AI review (GPT-4o)")
         st.caption(or_result.get("summary", ""))
 
-        concerns = or_result.get("concerns", [])
-        if concerns:
-            for ci, c in enumerate(concerns):
-                phrase = c.get("text", "")
-                concern = c.get("concern", "")
+        findings = or_result.get("findings", [])
+        if findings:
+            VERDICT_ICON = {
+                "discrepancy":      ("🔴", "#fff0f0", "#e03131"),
+                "appears_supported": ("🟢", "#f0fff4", "#2f9e44"),
+                "unverifiable":     ("🟡", "#fffff0", "#868e96"),
+            }
+            for f in findings:
+                phrase = f.get("text", "")
+                concern = f.get("concern", "")
+                verdict = f.get("verdict", "unverifiable")
+                explanation = f.get("explanation", "")
+                auth_value = f.get("authoritative_value", "")
+                source = f.get("source", "")
+                icon, bg, border = VERDICT_ICON.get(verdict, ("🟡", "#fffff0", "#868e96"))
+                label = verdict.replace("_", " ").title()
                 st.markdown(
-                    f"<div style='border-left:3px solid #7950f2;padding:6px 12px;margin:6px 0;"
-                    f"background:#f8f0ff;border-radius:0 4px 4px 0'>"
-                    f"<span style='font-family:monospace;font-size:12px;color:#333'>\"{html.escape(_safe(phrase))}\"</span><br>"
-                    f"<span style='font-size:13px;color:#444'>{html.escape(_safe(concern))}</span>"
-                    f"</div>",
+                    f"<div style='border-left:4px solid {border};padding:8px 14px;margin:8px 0;"
+                    f"background:{bg};border-radius:0 4px 4px 0'>"
+                    f"{icon} <strong>{label}</strong> — "
+                    f"<span style='font-family:monospace;font-size:12px'>\"{html.escape(_safe(phrase))}\"</span><br>"
+                    f"<span style='font-size:13px;color:#333;margin-top:4px;display:block'>{html.escape(_safe(explanation))}</span>"
+                    + (f"<span style='font-size:12px;color:#555'>Found: {html.escape(_safe(auth_value))}</span><br>" if auth_value else "")
+                    + (f"<span style='font-size:11px;color:#888'>Source: {html.escape(source)}</span>" if source else "")
+                    + "</div>",
                     unsafe_allow_html=True,
                 )
-                if st.button("Verify", key=f"or_verify_{ci}", type="secondary"):
-                    with st.spinner("Searching…"):
-                        try:
-                            vc = verify_open_concern(phrase, concern, text)
-                            st.session_state[f"or_verify_result_{ci}"] = vc
-                        except Exception as e:
-                            st.session_state[f"or_verify_result_{ci}"] = None
-                            st.error(f"Verification failed: {e}")
-
-                vc = st.session_state.get(f"or_verify_result_{ci}")
-                if vc:
-                    _render_verdict(vc)
         else:
             st.success("No editorial concerns identified.")
 
@@ -425,16 +427,16 @@ with st.sidebar:
             )
 
     st.divider()
-    st.header("Open review")
-    st.caption("Free-form editorial review — flags anything the LLM thinks deserves scrutiny, not limited to predefined categories.")
-    or_enabled = st.toggle("Enable open review", key="or_enabled")
+    st.header("Full AI review")
+    st.caption("Identifies and verifies all claims in one pass — figures, titles, dates, rankings, and more.")
+    or_enabled = st.toggle("Enable full AI review", key="or_enabled")
     if or_enabled:
         import os
         if not os.getenv("OPENAI_API_KEY"):
             st.warning("OPENAI_API_KEY not set in .env")
         else:
             st.button(
-                "Run open review",
+                "Run full AI review",
                 key="run_or",
                 type="primary",
                 use_container_width=True,

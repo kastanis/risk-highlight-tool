@@ -168,6 +168,88 @@ def _log_to_supabase(
         print(f"Warning: Supabase logging failed: {e}")
 
 
+FULL_REVIEW_PROMPT = """\
+You are an experienced journalism editor and fact-checker reviewing a text excerpt \
+before publication. Your job is to identify every claim that deserves scrutiny, \
+then immediately search the web to verify each one.
+
+For each concern:
+1. Identify the specific phrase from the article
+2. Search for authoritative information (government sources, official records, primary data)
+3. Return a verdict based on what you find
+
+Look for:
+- Numbers, figures, percentages, dollar amounts that may be wrong
+- Names, titles, or roles (people change jobs — always search to confirm current status)
+- Dates, timelines, and historical claims
+- Rankings and superlatives ("largest", "first", "top producer")
+- Agency or organization names that may be misspelled or outdated
+- Causal claims and logical inconsistencies
+- Anything a careful editor would flag before publishing
+
+IMPORTANT:
+- Always search the web before forming a verdict — do not rely on training data
+- Use primary sources: .gov sites, official records, academic sources
+- For government roles and titles, always search — they change frequently
+- If the article says "million" but sources say "billion", that is a discrepancy
+
+Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
+{
+  "findings": [
+    {
+      "text": "exact phrase from the article",
+      "concern": "what specifically to check",
+      "verdict": "discrepancy" | "appears_supported" | "unverifiable",
+      "explanation": "one or two sentences on what you found",
+      "authoritative_value": "what the source actually says, or empty string",
+      "source": "URL used, or empty string"
+    }
+  ],
+  "summary": "One sentence overall assessment."
+}
+
+If nothing needs checking:
+{
+  "findings": [],
+  "summary": "No significant editorial concerns identified."
+}
+"""
+
+
+def full_review(text: str) -> dict:
+    """
+    Single-pass editorial review: identifies concerns and verifies each via web search.
+    Returns dict with 'findings' and 'summary'.
+    """
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    response = client.responses.create(
+        model="gpt-4o",
+        tools=[{"type": "web_search_preview"}],
+        input=[
+            {"role": "system", "content": FULL_REVIEW_PROMPT},
+            {"role": "user", "content": text},
+        ],
+    )
+    raw = response.output_text or "{}"
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return {"findings": [], "summary": "Could not parse review response."}
+
+    return {
+        "findings": parsed.get("findings", []),
+        "summary": parsed.get("summary", ""),
+    }
+
+
 OPEN_REVIEW_PROMPT = """\
 You are an experienced journalism editor reviewing a text excerpt before publication. \
 Flag anything a careful editor should question — do not limit yourself to any predefined \
