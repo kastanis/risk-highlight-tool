@@ -188,10 +188,13 @@ Look for:
 - Anything a careful editor would flag before publishing
 
 IMPORTANT:
-- Always search the web before forming a verdict — do not rely on training data
+- You MUST perform a web search for EVERY finding before assigning a verdict
+- NEVER use training data to confirm or deny a claim — your knowledge is outdated
+- Search even for things you think you know — facts, roles, and titles change
 - Use primary sources: .gov sites, official records, academic sources
-- For government roles and titles, always search — they change frequently
+- For any person's current role, title, or status — always search, never assume
 - If the article says "million" but sources say "billion", that is a discrepancy
+- If you cannot find a current authoritative source, verdict must be "unverifiable"
 
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
