@@ -1,5 +1,7 @@
 # risk-highlight-tool
 
+[![Tests](https://github.com/kastanis/risk-highlight-tool/actions/workflows/test.yml/badge.svg)](https://github.com/kastanis/risk-highlight-tool/actions/workflows/test.yml)
+
 A suite of tools that surface risks in journalism copy and data analysis code before publication. Each layer targets a different stage of the reporting workflow.
 
 ## Layers
