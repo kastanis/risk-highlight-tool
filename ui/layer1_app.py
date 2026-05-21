@@ -50,7 +50,7 @@ def _render_verdict(result) -> None:
     if result.authoritative_value:
         st.caption(f"Found: {_safe(result.authoritative_value)}")
     if result.source:
-        st.caption(f"Source: {result.source}")
+        st.caption(f"Source: {html.escape(result.source)}")
 
 
 # ---------------------------------------------------------------------------
@@ -262,8 +262,8 @@ if flags:
                 f"<span style='{priority_style}padding:1px 6px;border-radius:3px;"
                 f"font-size:11px;'>{f.priority}</span></td>"
             )
-            body += f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{f.text}</td>"
-            body += f"<td style='padding:5px 10px;font-size:12px;color:#444'>{f.reason}</td>"
+            body += f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{html.escape(f.text)}</td>"
+            body += f"<td style='padding:5px 10px;font-size:12px;color:#444'>{html.escape(f.reason)}</td>"
             body += "</tr>"
 
         st.markdown(
