@@ -77,5 +77,4 @@ data/
   agencies/            # federal_agencies.yaml — 479 agencies, AP style canonicals
   patterns/            # layer1_patterns.yaml — add patterns without code changes
 docs/                  # PATTERN_SOURCES.md, EVALUATION_PLAN_L1.md, LAYER1_CHANGELOG.md
-analysis/              # layer1_copy_risk.ipynb — exploratory analysis
 ```
