@@ -14,7 +14,7 @@ A suite of tools that surface risks in journalism copy and data analysis code be
 
 ## Layer 1 — Copy Risk
 
-Flags 8 risk pattern types in journalism copy using regex + spaCy NER. No LLM in the flagging path — every flag is produced by a named, auditable rule.
+Flags 9 risk pattern types in journalism copy using regex + n-gram fuzzy matching. No LLM in the flagging path — every flag is produced by a named, auditable rule. An optional AI second pass (GPT-4o) runs the same categories and logs disagreements to Supabase.
 
 **Flag types:**
 
@@ -24,16 +24,33 @@ Flags 8 risk pattern types in journalism copy using regex + spaCy NER. No LLM in
 | `vague_attribution` | High | `experts say`, `researchers found`, `economists argue` |
 | `passive_attribution` | High | `it was reported that`, `was found to be` |
 | `causal_claim` | High | `led to`, `caused`, `because of` |
+| `agency_name` | High | `Customs and Border Patrol` (should be Protection), outdated agency names |
 | `certainty_language` | Medium | `shows`, `proves`, `confirms` |
 | `trend_language` | Medium | `surged`, `plummeted`, `rose sharply` |
 | `comparative_claim` | Medium | `highest`, `more than`, `all-time` |
 | `temporal_claim` | Medium | `last year`, `since 2019`, `historically` |
+
+**Agency name checking:**
+- 479 federal agencies loaded from `data/agencies/federal_agencies.yaml` (AP Stylebook canonicals)
+- Tier 1 (54 major agencies) enabled by default; Tier 2 (425 agencies) opt-in via sidebar
+- Fuzzy n-gram matching (2–8 word windows) catches misspellings and wrong-word substitutions
+- Explicit regex patterns in `data/patterns/layer1_patterns.yaml` catch substitutions fuzzy matching can't (e.g. "Customs and Border Patrol")
+
+**AI features (optional, require `OPENAI_API_KEY`):**
+- **AI second pass** — GPT-4o runs the same 9 flag categories; disagreements logged to Supabase
+- **Full AI review** — single-pass: identifies and web-searches all claims (figures, titles, dates, rankings). Best for static facts; political/time-sensitive claims may be unreliable
+- **Fact checker** — verify a specific quantitative claim against web sources or a reporter-supplied URL
 
 ## Running locally
 
 ```bash
 # Install dependencies
 uv sync
+
+# Copy env template and add keys (required for AI features)
+cp .env.example .env
+# OPENAI_API_KEY — required for AI second pass, Full AI review, fact checker
+# SUPABASE_URL / SUPABASE_KEY — required for logging AI vs rule comparisons
 
 # Layer 1 — Copy Risk Checker
 uv run streamlit run ui/layer1_app.py
@@ -45,18 +62,17 @@ uv run python evaluation/run_eval.py
 uv run pytest tests/
 ```
 
-Requires `OPENAI_API_KEY` in `.env` for Layer 3 (notes recall) only.
-
 ## Repo structure
 
 ```
-risk_highlight/        # Shared flagging logic (single source of truth)
+risk_highlight/        # Shared flagging logic (layer1.py, ai_check.py, fact_check.py)
 ui/                    # Streamlit apps, one per layer
 tests/                 # Smoke tests for Layer 1
 evaluation/
   gold/                # Hand-labeled test sets
   benchmark/           # Benchmark scripts and snippets
-data/patterns/         # YAML pattern registry (extend Layer 1 without code changes)
+data/
+  agencies/            # federal_agencies.yaml — 479 agencies with AP style canonicals
+  patterns/            # layer1_patterns.yaml — extend Layer 1 without code changes
 docs/                  # Active reference docs
-analysis/              # Exploratory notebooks
 ```
