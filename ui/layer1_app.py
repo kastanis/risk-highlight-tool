@@ -6,15 +6,59 @@ Run:
 """
 
 import html
+import os
 import sys
 from pathlib import Path
 
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Populate os.environ from st.secrets so downstream modules (ai_check, fact_check)
+# can read keys via os.getenv() without changes. st.secrets is a no-op locally
+# when keys aren't set there, so .env still works for local dev.
+for _k in ("OPENAI_API_KEY", "SUPABASE_URL", "SUPABASE_KEY"):
+    if _k not in os.environ and _k in st.secrets:
+        os.environ[_k] = st.secrets[_k]
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
+from risk_highlight.ai_check import run_ai_check, full_review  # noqa: E402
+from risk_highlight.fact_check import fact_check_claim  # noqa: E402
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _safe(text: str) -> str:
+    """Escape characters that break Streamlit markdown rendering."""
+    return text.replace("$", r"\$").replace("%", r"\%")
+
+
+VERDICT_LABEL = {
+    "confirmed":    ("Appears supported",  "#2f9e44"),
+    "discrepancy":  ("Discrepancy found",  "#e03131"),
+    "unverifiable": ("Could not verify",   "#868e96"),
+}
+
+
+def _render_verdict(result) -> None:
+    label, color = VERDICT_LABEL.get(result.verdict, ("Unknown", "#868e96"))
+    st.markdown(
+        f"<div style='margin-top:6px'>"
+        f"<span style='background:{color};color:#fff;padding:3px 10px;"
+        f"border-radius:4px;font-weight:bold;font-size:13px'>{label}</span></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(_safe(result.explanation))
+    if result.authoritative_value:
+        st.caption(f"Found: {_safe(result.authoritative_value)}")
+    if result.source:
+        st.caption(f"Source: {html.escape(result.source)}")
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +163,14 @@ with col_input:
     )
     st.button("Check for risk flags", type="primary", use_container_width=True)
 
+# Auto-clear all AI/fact-check results when text changes.
+_text_hash = hash(text)
+if st.session_state.get("_text_hash") != _text_hash:
+    for key in list(st.session_state.keys()):
+        if key.startswith(("ai_result", "or_result", "fc_result_", "or_verify_result_")):
+            del st.session_state[key]
+    st.session_state["_text_hash"] = _text_hash
+
 # Run flagging. Sidebar checkbox state is available via session_state with
 # default=True on first render, so filtering is safe before the sidebar block runs.
 flags = flag_text(text) if text.strip() else []
@@ -218,8 +270,8 @@ if flags:
                 f"<span style='{priority_style}padding:1px 6px;border-radius:3px;"
                 f"font-size:11px;'>{f.priority}</span></td>"
             )
-            body += f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{f.text}</td>"
-            body += f"<td style='padding:5px 10px;font-size:12px;color:#444'>{f.reason}</td>"
+            body += f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{html.escape(f.text)}</td>"
+            body += f"<td style='padding:5px 10px;font-size:12px;color:#444'>{html.escape(f.reason)}</td>"
             body += "</tr>"
 
         st.markdown(
@@ -229,6 +281,130 @@ if flags:
         )
     else:
         st.info("No flag types selected — use the sidebar to enable categories.")
+
+# --- AI second pass ---
+if st.session_state.get("ai_enabled") and text.strip():
+    if st.session_state.get("run_ai"):
+        with st.spinner("Running GPT-4o…"):
+            try:
+                ai_result = run_ai_check(text, flags)
+                st.session_state["ai_result"] = ai_result
+            except Exception as e:
+                st.session_state["ai_result"] = None
+                st.error(f"AI check failed: {e}")
+
+    ai_result = st.session_state.get("ai_result")
+    if ai_result:
+        st.divider()
+        st.subheader("AI second pass (GPT-4o)")
+
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("LLM flagged", "Yes" if ai_result.flagged else "No")
+        col_b.metric("LLM-only finds", len(ai_result.llm_only))
+        col_c.metric("Agreed with tool", "Yes" if ai_result.agreed else "No")
+
+        st.caption(f"**GPT-4o explanation:** {ai_result.explanation}")
+
+        if ai_result.llm_only:
+            st.markdown("**Flag types found by AI but not tool:**")
+            llm_only_spans = [s for s in ai_result.spans if s["flag_type"] in ai_result.llm_only]
+            rows_html = ""
+            for s in llm_only_spans:
+                rows_html += (
+                    "<tr style='border-bottom:1px solid #eee'>"
+                    f"<td style='padding:5px 10px;font-weight:bold;font-size:12px'>{s['flag_type'].replace('_', ' ')}</td>"
+                    "<td style='padding:5px 10px'>"
+                    "<span style='background:#7950f2;color:#fff;padding:1px 6px;"
+                    "border-radius:3px;font-size:11px'>AI</span></td>"
+                    f"<td style='padding:5px 10px;font-family:monospace;font-size:12px'>{html.escape(s['text'])}</td>"
+                    f"<td style='padding:5px 10px;font-size:12px;color:#444'>{html.escape(s['reason'])}</td>"
+                    "</tr>"
+                )
+            st.markdown(
+                f"<table style='font-family:sans-serif;border-collapse:collapse;width:100%'>"
+                f"<tbody>{rows_html}</tbody></table>",
+                unsafe_allow_html=True,
+            )
+
+        if ai_result.tool_only:
+            st.markdown("**Flag types found by tool but not AI:**")
+            st.caption(", ".join(ft.replace("_", " ") for ft in ai_result.tool_only))
+
+# --- Full AI review ---
+if st.session_state.get("or_enabled") and text.strip():
+    if st.session_state.get("run_or"):
+        with st.spinner("Reviewing and verifying claims…"):
+            try:
+                or_result = full_review(text)
+                st.session_state["or_result"] = or_result
+            except Exception as e:
+                st.session_state["or_result"] = None
+                st.error(f"Full AI review failed: {e}")
+
+    or_result = st.session_state.get("or_result")
+    if or_result:
+        st.divider()
+        st.subheader("Full AI review (GPT-4o)")
+        st.caption(or_result.get("summary", ""))
+
+        findings = or_result.get("findings", [])
+        if findings:
+            VERDICT_ICON = {
+                "discrepancy":      ("🔴", "#fff0f0", "#e03131"),
+                "appears_supported": ("🟢", "#f0fff4", "#2f9e44"),
+                "unverifiable":     ("🟡", "#fffff0", "#868e96"),
+            }
+            for f in findings:
+                phrase = f.get("text", "")
+                concern = f.get("concern", "")
+                verdict = f.get("verdict", "unverifiable")
+                explanation = f.get("explanation", "")
+                auth_value = f.get("authoritative_value", "")
+                source = f.get("source", "")
+                icon, bg, border = VERDICT_ICON.get(verdict, ("🟡", "#fffff0", "#868e96"))
+                label = verdict.replace("_", " ").title()
+                st.markdown(
+                    f"<div style='border-left:4px solid {border};padding:8px 14px;margin:8px 0;"
+                    f"background:{bg};border-radius:0 4px 4px 0'>"
+                    f"{icon} <strong>{label}</strong> — "
+                    f"<span style='font-family:monospace;font-size:12px'>\"{html.escape(_safe(phrase))}\"</span><br>"
+                    f"<span style='font-size:13px;color:#333;margin-top:4px;display:block'>{html.escape(_safe(explanation))}</span>"
+                    + (f"<span style='font-size:12px;color:#555'>Found: {html.escape(_safe(auth_value))}</span><br>" if auth_value else "")
+                    + (f"<span style='font-size:11px;color:#888'>Source: {html.escape(source)}</span>" if source else "")
+                    + "</div>",
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.success("No editorial concerns identified.")
+
+# --- Fact checker ---
+_VAGUE_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "half"}
+quant_flags = [
+    f for f in flags
+    if f.flag_type == "quantitative_claim" and f.text.lower().strip() not in _VAGUE_WORDS
+] if flags else []
+if quant_flags and text.strip():
+    st.divider()
+    st.subheader("Fact checker")
+    st.caption(
+        "Searches the web to verify specific figures against authoritative sources. "
+        "Results cite the source used — always confirm before publishing."
+    )
+
+    for i, f in enumerate(quant_flags):
+        with st.expander(f'"{f.text}"', expanded=False):
+            if st.button("Verify this figure", key=f"fc_btn_{i}", type="primary"):
+                with st.spinner("Searching…"):
+                    try:
+                        fc = fact_check_claim(f.text, text)
+                        st.session_state[f"fc_result_{i}"] = fc
+                    except Exception as e:
+                        st.session_state[f"fc_result_{i}"] = None
+                        st.error(f"Fact check failed: {e}")
+
+            fc = st.session_state.get(f"fc_result_{i}")
+            if fc:
+                _render_verdict(fc)
 
 # --- Sidebar ---
 with st.sidebar:
@@ -244,6 +420,39 @@ with st.sidebar:
     st.markdown("**Medium priority**")
     for ft in sorted(med_types):
         st.checkbox(ft.replace("_", " "), value=True, key=f"cb_{ft}")
+
+    st.divider()
+    st.header("AI second pass")
+    st.caption("Runs the same flag categories as the rule-based tool — shows what AI catches that rules miss. Flags are logged anonymously to improve the tool.")
+    ai_enabled = st.toggle("Enable GPT-4o check", key="ai_enabled")
+    if ai_enabled:
+        if not os.getenv("OPENAI_API_KEY"):
+            st.warning("OPENAI_API_KEY not set in .env or Streamlit secrets")
+        else:
+            st.button(
+                "Run AI check",
+                key="run_ai",
+                type="primary",
+                use_container_width=True,
+                disabled=not text.strip(),
+            )
+
+    st.divider()
+    st.header("Full AI review")
+    st.caption("(In progress) Identify and verify all claims in one pass — figures, titles, dates, rankings, and more. "
+               "NOTE: LLM is relying on stale training information.")
+    or_enabled = st.toggle("Enable full AI review", key="or_enabled")
+    if or_enabled:
+        if not os.getenv("OPENAI_API_KEY"):
+            st.warning("OPENAI_API_KEY not set in .env or Streamlit secrets")
+        else:
+            st.button(
+                "Run full AI review",
+                key="run_or",
+                type="primary",
+                use_container_width=True,
+                disabled=not text.strip(),
+            )
 
     st.divider()
     st.header("About")
