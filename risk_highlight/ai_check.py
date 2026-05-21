@@ -175,13 +175,19 @@ categories. Look for:
 
 - Factual claims that seem off, contradictory, or unverifiable
 - Numbers, dates, or figures that don't add up or seem inconsistent
-- Names, titles, or roles that may be wrong
+- Names, titles, or roles that may be wrong or have recently changed
 - Geographic errors or misattributions
 - Missing context that changes the meaning of a claim
 - Logical inconsistencies within the text
 - Agency or organization names that appear incorrect or outdated
 - Anachronisms or timeline errors
 - Anything that would typically trigger an editor's correction
+
+IMPORTANT: Do not assert that something is factually wrong based on your training data. \
+Your knowledge has a cutoff date and government roles, titles, and facts change frequently. \
+Instead, flag things that NEED verification with neutral language like \
+"Verify whether X is accurate" or "Confirm current role/status of X". \
+Never state something is incorrect — only flag it as requiring verification.
 
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
