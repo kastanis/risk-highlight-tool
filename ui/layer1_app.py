@@ -420,6 +420,7 @@ with st.sidebar:
 
     st.divider()
     st.header("AI second pass")
+    st.caption("Runs the same flag categories as the rule-based tool — shows what AI catches that rules miss. Flags are logged anonymously to improve the tool.")
     ai_enabled = st.toggle("Enable GPT-4o check", key="ai_enabled")
     if ai_enabled:
         import os
@@ -437,7 +438,7 @@ with st.sidebar:
     st.divider()
     st.header("Full AI review")
     st.caption("(In progress) Identify and verify all claims in one pass — figures, titles, dates, rankings, and more. "
-               "NOTE: LLM relying on stale training information.")
+               "NOTE: LLM is relying on stale training information.")
     or_enabled = st.toggle("Enable full AI review", key="or_enabled")
     if or_enabled:
         import os
