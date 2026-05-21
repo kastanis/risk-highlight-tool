@@ -1,6 +1,7 @@
 *.vim
 .env
 ui/archive/
+docs/archive/
 __pycache__/
 *.pyc
 .Renviron
