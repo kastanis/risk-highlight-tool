@@ -1,5 +1,6 @@
 *.vim
 .env
+ui/archive/
 .Renviron
 .venv
 .quarto

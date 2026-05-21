@@ -6,6 +6,7 @@ Run:
 """
 
 import html
+import os
 import sys
 from pathlib import Path
 
@@ -13,6 +14,13 @@ import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Populate os.environ from st.secrets so downstream modules (ai_check, fact_check)
+# can read keys via os.getenv() without changes. st.secrets is a no-op locally
+# when keys aren't set there, so .env still works for local dev.
+for _k in ("OPENAI_API_KEY", "SUPABASE_URL", "SUPABASE_KEY"):
+    if _k not in os.environ and _k in st.secrets:
+        os.environ[_k] = st.secrets[_k]
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from risk_highlight.layer1 import (  # noqa: E402
@@ -418,9 +426,8 @@ with st.sidebar:
     st.caption("Runs the same flag categories as the rule-based tool — shows what AI catches that rules miss. Flags are logged anonymously to improve the tool.")
     ai_enabled = st.toggle("Enable GPT-4o check", key="ai_enabled")
     if ai_enabled:
-        import os
         if not os.getenv("OPENAI_API_KEY"):
-            st.warning("OPENAI_API_KEY not set in .env")
+            st.warning("OPENAI_API_KEY not set in .env or Streamlit secrets")
         else:
             st.button(
                 "Run AI check",
@@ -436,9 +443,8 @@ with st.sidebar:
                "NOTE: LLM is relying on stale training information.")
     or_enabled = st.toggle("Enable full AI review", key="or_enabled")
     if or_enabled:
-        import os
         if not os.getenv("OPENAI_API_KEY"):
-            st.warning("OPENAI_API_KEY not set in .env")
+            st.warning("OPENAI_API_KEY not set in .env or Streamlit secrets")
         else:
             st.button(
                 "Run full AI review",
