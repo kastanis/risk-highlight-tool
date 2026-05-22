@@ -4,6 +4,7 @@ ui/archive/
 docs/archive/
 __pycache__/
 *.pyc
+.pytest_cache/
 .Renviron
 .venv
 .quarto
