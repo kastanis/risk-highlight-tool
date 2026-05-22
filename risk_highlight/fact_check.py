@@ -7,10 +7,11 @@ the figure against authoritative sources.
 
 import os
 from dataclasses import dataclass
+from datetime import date
 
 from dotenv import load_dotenv
 
-from risk_highlight.ai_check import _call_llm, _parse_llm_json
+from risk_highlight.ai_check import _call_llm_with_forced_search, _parse_llm_json
 
 load_dotenv()
 
@@ -25,6 +26,8 @@ class FactCheckResult:
 
 
 SYSTEM_PROMPT = """\
+Today's date is {{today}}. Your training data is outdated — do not use it to confirm or deny any figure.
+
 You are a journalism fact-checker specializing in quantitative claims. \
 Given a claim from a news article, verify whether the figure is accurate.
 
@@ -81,12 +84,13 @@ def fact_check_claim(claim_text: str, context: str) -> FactCheckResult:
         claim_text: the specific phrase to check (e.g. "1.56 million bushels")
         context: the full sentence for context
     """
+    prompt = SYSTEM_PROMPT.replace("{{today}}", date.today().isoformat())
     user_prompt = (
         f'Claim to verify: "{claim_text}"\n'
         f'Full sentence: "{context}"\n\n'
         f'Search the web for the most authoritative current figure related to this claim '
         f'and check whether "{claim_text}" is accurate.'
     )
-    parsed = _parse_llm_json(_call_llm(SYSTEM_PROMPT, user_prompt))
+    parsed = _parse_llm_json(_call_llm_with_forced_search(prompt, user_prompt))
     return _build_result(claim_text, parsed, "Could not parse fact-check response.")
 
