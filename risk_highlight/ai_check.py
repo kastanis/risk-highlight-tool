@@ -8,6 +8,7 @@ then logs the comparison to Supabase.
 import json
 import os
 from dataclasses import dataclass
+from datetime import date
 
 from dotenv import load_dotenv
 
@@ -85,12 +86,28 @@ class AIResult:
 # ---------------------------------------------------------------------------
 
 def _call_llm(system_prompt: str, user_content: str) -> str:
-    """Call GPT-4o with web search and return raw output text."""
+    """Call GPT-4o with web search available and return raw output text."""
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.responses.create(
         model="gpt-4o",
         tools=[{"type": "web_search_preview"}],
+        input=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+    )
+    return response.output_text or "{}"
+
+
+def _call_llm_with_forced_search(system_prompt: str, user_content: str) -> str:
+    """Call GPT-4o with web search required on every call and return raw output text."""
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    response = client.responses.create(
+        model="gpt-4o",
+        tools=[{"type": "web_search_preview"}],
+        tool_choice="required",
         input=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content},
@@ -192,6 +209,8 @@ def _log_to_supabase(
 # ---------------------------------------------------------------------------
 
 FULL_REVIEW_PROMPT = """\
+Today's date is {{today}}. Your training data is outdated — do not use it to confirm or deny any claim.
+
 You are an experienced journalism editor and fact-checker reviewing a text excerpt \
 before publication. Your job is to identify every claim that deserves scrutiny, \
 then immediately search the web to verify each one.
@@ -218,6 +237,7 @@ IMPORTANT:
 - For any person's current role, title, or status — always search, never assume
 - If the article says "million" but sources say "billion", that is a discrepancy
 - If you cannot find a current authoritative source, verdict must be "unverifiable"
+- When calculating time intervals ("over the past X years", "since YYYY"), use today's date above
 
 Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
 {
@@ -245,9 +265,11 @@ If nothing needs checking:
 def full_review(text: str) -> dict:
     """
     Single-pass editorial review: identifies concerns and verifies each via web search.
+    Uses forced web search to prevent model from defaulting to training data.
     Returns dict with 'findings' and 'summary'.
     """
-    parsed = _parse_llm_json(_call_llm(FULL_REVIEW_PROMPT, text))
+    prompt = FULL_REVIEW_PROMPT.replace("{{today}}", date.today().isoformat())
+    parsed = _parse_llm_json(_call_llm_with_forced_search(prompt, text))
     return {
         "findings": parsed.get("findings", []),
         "summary": parsed.get("summary", ""),

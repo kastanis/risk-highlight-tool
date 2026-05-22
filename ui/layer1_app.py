@@ -58,7 +58,11 @@ def _render_verdict(result) -> None:
     if result.authoritative_value:
         st.caption(f"Found: {_safe(result.authoritative_value)}")
     if result.source:
-        st.caption(f"Source: {html.escape(result.source)}")
+        st.markdown(
+            f"<span style='font-size:12px;color:#888'>Source: "
+            f"<a href='{html.escape(result.source)}' target='_blank'>{html.escape(result.source)}</a></span>",
+            unsafe_allow_html=True,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -370,7 +374,7 @@ if st.session_state.get("or_enabled") and text.strip():
                     f"<span style='font-family:monospace;font-size:12px'>\"{html.escape(_safe(phrase))}\"</span><br>"
                     f"<span style='font-size:13px;color:#333;margin-top:4px;display:block'>{html.escape(_safe(explanation))}</span>"
                     + (f"<span style='font-size:12px;color:#555'>Found: {html.escape(_safe(auth_value))}</span><br>" if auth_value else "")
-                    + (f"<span style='font-size:11px;color:#888'>Source: {html.escape(source)}</span>" if source else "")
+                    + (f"<span style='font-size:11px;color:#888'>Source: <a href='{html.escape(source)}' target='_blank'>{html.escape(source)}</a></span>" if source else "")
                     + "</div>",
                     unsafe_allow_html=True,
                 )
@@ -439,8 +443,7 @@ with st.sidebar:
 
     st.divider()
     st.header("Full AI review")
-    st.caption("(In progress) Identify and verify all claims in one pass — figures, titles, dates, rankings, and more. "
-               "NOTE: LLM is relying on stale training information.")
+    st.caption("Identify and verify all claims in one pass — figures, titles, dates, rankings, and more.")
     or_enabled = st.toggle("Enable full AI review", key="or_enabled")
     if or_enabled:
         if not os.getenv("OPENAI_API_KEY"):
