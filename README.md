@@ -16,7 +16,7 @@ A suite of tools that surface risks in journalism copy and data analysis code be
 
 ## Layer 1 — Copy Risk
 
-Flags 9 risk pattern types in journalism copy using regex + n-gram fuzzy matching. No LLM in the flagging path — every flag is produced by a named, auditable rule. An optional AI second pass (GPT-4o) runs the same categories and logs disagreements to Supabase.
+Flags 9 risk pattern types in journalism copy using regex + n-gram fuzzy matching. No LLM in the flagging path — every flag is produced by a named, auditable rule. An optional AI second pass (GPT-4o) runs the same categories and logs disagreements to Supabase; those disagreements are periodically analyzed to identify false positives and recall gaps, and used to refine the rule-based patterns over time.
 
 **Flag types:**
 

@@ -28,4 +28,5 @@ dependencies = [
     "streamlit>=1.45.0",
     "supabase>=2.30.0",
     "python-dotenv>=1.0.0",
+    "pandas>=2.3.3",
 ]
