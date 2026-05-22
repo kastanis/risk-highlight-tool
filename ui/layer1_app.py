@@ -443,8 +443,7 @@ with st.sidebar:
 
     st.divider()
     st.header("Full AI review")
-    st.caption("(In progress) Identify and verify all claims in one pass — figures, titles, dates, rankings, and more. "
-               "NOTE: LLM is relying on stale training information.")
+    st.caption("Identify and verify all claims in one pass — figures, titles, dates, rankings, and more.")
     or_enabled = st.toggle("Enable full AI review", key="or_enabled")
     if or_enabled:
         if not os.getenv("OPENAI_API_KEY"):
