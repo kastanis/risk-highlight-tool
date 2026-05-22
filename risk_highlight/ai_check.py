@@ -80,27 +80,46 @@ class AIResult:
     agreed: bool
 
 
-def run_ai_check(text: str, tool_flags: list) -> AIResult:
-    """Call GPT-4o and return an AIResult with spans and comparison vs tool flags."""
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+def _call_llm(system_prompt: str, user_content: str) -> str:
+    """Call GPT-4o with web search and return raw output text."""
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
     response = client.responses.create(
         model="gpt-4o",
         tools=[{"type": "web_search_preview"}],
         input=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": text},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ],
     )
-    raw = response.output_text or "{}"
+    return response.output_text or "{}"
+
+
+def _parse_llm_json(raw: str) -> dict:
+    """Strip markdown fences and parse JSON; returns {} on failure."""
     raw = raw.strip()
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
     raw = raw.strip()
-    parsed = json.loads(raw)
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# AI second pass
+# ---------------------------------------------------------------------------
+
+def run_ai_check(text: str, tool_flags: list) -> AIResult:
+    """Call GPT-4o and return an AIResult with spans and comparison vs tool flags."""
+    parsed = _parse_llm_json(_call_llm(SYSTEM_PROMPT, text))
 
     flagged = bool(parsed.get("flag", False))
     explanation = str(parsed.get("explanation", "")).strip()
@@ -111,7 +130,7 @@ def run_ai_check(text: str, tool_flags: list) -> AIResult:
         for s in raw_spans
         if isinstance(s, dict) and s.get("flag_type") in VALID_ISSUE_TYPES
     ]
-    llm_types = list(dict.fromkeys(s["flag_type"] for s in spans))  # unique, order preserved
+    llm_types = list(dict.fromkeys(s["flag_type"] for s in spans))
 
     tool_flag_types = [f.flag_type for f in tool_flags]
     tool_spans = [{"flag_type": f.flag_type, "text": f.text, "reason": f.reason} for f in tool_flags]
@@ -167,6 +186,10 @@ def _log_to_supabase(
     except Exception as e:
         print(f"Warning: Supabase logging failed: {e}")
 
+
+# ---------------------------------------------------------------------------
+# Full AI review
+# ---------------------------------------------------------------------------
 
 FULL_REVIEW_PROMPT = """\
 You are an experienced journalism editor and fact-checker reviewing a text excerpt \
@@ -224,103 +247,9 @@ def full_review(text: str) -> dict:
     Single-pass editorial review: identifies concerns and verifies each via web search.
     Returns dict with 'findings' and 'summary'.
     """
-    from openai import OpenAI
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    response = client.responses.create(
-        model="gpt-4o",
-        tools=[{"type": "web_search_preview"}],
-        input=[
-            {"role": "system", "content": FULL_REVIEW_PROMPT},
-            {"role": "user", "content": text},
-        ],
-    )
-    raw = response.output_text or "{}"
-    raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    raw = raw.strip()
-    try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError:
-        return {"findings": [], "summary": "Could not parse review response."}
-
+    parsed = _parse_llm_json(_call_llm(FULL_REVIEW_PROMPT, text))
     return {
         "findings": parsed.get("findings", []),
         "summary": parsed.get("summary", ""),
     }
 
-
-OPEN_REVIEW_PROMPT = """\
-You are an experienced journalism editor reviewing a text excerpt before publication. \
-Flag anything a careful editor should question — do not limit yourself to any predefined \
-categories. Look for:
-
-- Factual claims that seem off, contradictory, or unverifiable
-- Numbers, dates, or figures that don't add up or seem inconsistent
-- Names, titles, or roles that may be wrong or have recently changed
-- Geographic errors or misattributions
-- Missing context that changes the meaning of a claim
-- Logical inconsistencies within the text
-- Agency or organization names that appear incorrect or outdated
-- Anachronisms or timeline errors
-- Anything that would typically trigger an editor's correction
-
-IMPORTANT: Do not assert that something is factually wrong based on your training data. \
-Your knowledge has a cutoff date and government roles, titles, and facts change frequently. \
-Instead, flag things that NEED verification with neutral language like \
-"Verify whether X is accurate" or "Confirm current role/status of X". \
-Never state something is incorrect — only flag it as requiring verification.
-
-Reply ONLY with valid JSON in this exact format (no markdown, no extra text):
-{
-  "concerns": [
-    {"text": "the exact phrase or sentence from the article", "concern": "brief explanation of what to check"},
-    {"text": "another phrase", "concern": "explanation"}
-  ],
-  "summary": "One sentence overall assessment."
-}
-
-If nothing stands out, reply:
-{
-  "concerns": [],
-  "summary": "No significant editorial concerns identified."
-}
-"""
-
-
-def open_review(text: str) -> dict:
-    """
-    Free-form editorial review — flags anything the LLM thinks deserves scrutiny,
-    not constrained to predefined flag types.
-    Returns dict with 'concerns' (list of {text, concern}) and 'summary'.
-    """
-    from openai import OpenAI
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    response = client.responses.create(
-        model="gpt-4o",
-        tools=[{"type": "web_search_preview"}],
-        input=[
-            {"role": "system", "content": OPEN_REVIEW_PROMPT},
-            {"role": "user", "content": text},
-        ],
-    )
-    raw = response.output_text or "{}"
-    raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    raw = raw.strip()
-    try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError:
-        return {"concerns": [], "summary": "Could not parse review response."}
-
-    return {
-        "concerns": parsed.get("concerns", []),
-        "summary": parsed.get("summary", ""),
-    }
