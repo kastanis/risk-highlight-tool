@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from risk_highlight.layer1 import (  # noqa: E402
     FLAG_COLORS, HIGH_FLAGS, PRIORITY_RANK, Flag, flag_text
 )
-from risk_highlight.ai_check import run_ai_check, full_review  # noqa: E402
+from risk_highlight.ai_check import full_review, run_ai_check  # noqa: E402
 from risk_highlight.fact_check import fact_check_claim  # noqa: E402
 
 
