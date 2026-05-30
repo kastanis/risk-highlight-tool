@@ -85,8 +85,24 @@ class AIResult:
 # Shared helpers
 # ---------------------------------------------------------------------------
 
-def _call_llm(system_prompt: str, user_content: str) -> str:
-    """Call GPT-4o with web search available and return raw output text."""
+# GPT-4o pricing (per million tokens, May 2026)
+_GPT4O_INPUT_COST_PER_M = 5.00
+_GPT4O_OUTPUT_COST_PER_M = 15.00
+
+
+def _extract_usage(response) -> dict:
+    """Pull token counts and compute cost from an OpenAI Response object."""
+    usage = getattr(response, "usage", None)
+    if usage is None:
+        return {"prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0}
+    prompt = getattr(usage, "input_tokens", 0) or 0
+    completion = getattr(usage, "output_tokens", 0) or 0
+    cost = (prompt * _GPT4O_INPUT_COST_PER_M + completion * _GPT4O_OUTPUT_COST_PER_M) / 1_000_000
+    return {"prompt_tokens": prompt, "completion_tokens": completion, "cost_usd": round(cost, 6)}
+
+
+def _call_llm(system_prompt: str, user_content: str) -> tuple[str, dict]:
+    """Call GPT-4o with web search available. Returns (output_text, usage_dict)."""
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.responses.create(
@@ -97,11 +113,11 @@ def _call_llm(system_prompt: str, user_content: str) -> str:
             {"role": "user", "content": user_content},
         ],
     )
-    return response.output_text or "{}"
+    return response.output_text or "{}", _extract_usage(response)
 
 
-def _call_llm_with_forced_search(system_prompt: str, user_content: str) -> str:
-    """Call GPT-4o with web search required on every call and return raw output text."""
+def _call_llm_with_forced_search(system_prompt: str, user_content: str) -> tuple[str, dict]:
+    """Call GPT-4o with web search required. Returns (output_text, usage_dict)."""
     from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.responses.create(
@@ -113,7 +129,7 @@ def _call_llm_with_forced_search(system_prompt: str, user_content: str) -> str:
             {"role": "user", "content": user_content},
         ],
     )
-    return response.output_text or "{}"
+    return response.output_text or "{}", _extract_usage(response)
 
 
 def _parse_llm_json(raw: str) -> dict:
@@ -136,7 +152,8 @@ def _parse_llm_json(raw: str) -> dict:
 
 def run_ai_check(text: str, tool_flags: list) -> AIResult:
     """Call GPT-4o and return an AIResult with spans and comparison vs tool flags."""
-    parsed = _parse_llm_json(_call_llm(SYSTEM_PROMPT, text))
+    raw, usage = _call_llm(SYSTEM_PROMPT, text)
+    parsed = _parse_llm_json(raw)
 
     flagged = bool(parsed.get("flag", False))
     explanation = str(parsed.get("explanation", "")).strip()
@@ -168,9 +185,10 @@ def run_ai_check(text: str, tool_flags: list) -> AIResult:
         agreed=agreed,
     )
 
-    _log_to_supabase(text, tool_flag_types, tool_spans, llm_types, spans, agreed, llm_only, tool_only)
+    _log_to_supabase(text, tool_flag_types, tool_spans, llm_types, spans, agreed, llm_only, tool_only, usage)
+    _log_usage("ai_second_pass", text, usage)
 
-    return result
+    return result, usage
 
 
 def _log_to_supabase(
@@ -182,6 +200,7 @@ def _log_to_supabase(
     agreed: bool,
     llm_only: list[str],
     tool_only: list[str],
+    usage: dict | None = None,
 ) -> None:
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_KEY")
@@ -190,7 +209,7 @@ def _log_to_supabase(
     try:
         from supabase import create_client
         sb = create_client(url, key)
-        sb.table("comparisons").insert({
+        row = {
             "text": text,
             "tool_flags": tool_flags,
             "tool_spans": tool_spans,
@@ -199,9 +218,30 @@ def _log_to_supabase(
             "agreed": agreed,
             "llm_only": llm_only,
             "tool_only": tool_only,
-        }).execute()
+        }
+        sb.table("comparisons").insert(row).execute()
     except Exception as e:
         print(f"Warning: Supabase logging failed: {e}")
+
+
+def _log_usage(call_type: str, text: str, usage: dict) -> None:
+    """Append one row to the usage_log table for any call type."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    if not url or not key or not usage:
+        return
+    try:
+        from supabase import create_client
+        sb = create_client(url, key)
+        sb.table("usage_log").insert({
+            "call_type": call_type,
+            "text_snippet": text[:200],
+            "prompt_tokens": usage.get("prompt_tokens", 0),
+            "completion_tokens": usage.get("completion_tokens", 0),
+            "cost_usd": usage.get("cost_usd", 0.0),
+        }).execute()
+    except Exception as e:
+        print(f"Warning: usage_log insert failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -262,16 +302,19 @@ If nothing needs checking:
 """
 
 
-def full_review(text: str) -> dict:
+def full_review(text: str) -> tuple[dict, dict]:
     """
     Single-pass editorial review: identifies concerns and verifies each via web search.
     Uses forced web search to prevent model from defaulting to training data.
-    Returns dict with 'findings' and 'summary'.
+    Returns (result_dict, usage_dict).
     """
     prompt = FULL_REVIEW_PROMPT.replace("{{today}}", date.today().isoformat())
-    parsed = _parse_llm_json(_call_llm_with_forced_search(prompt, text))
-    return {
+    raw, usage = _call_llm_with_forced_search(prompt, text)
+    parsed = _parse_llm_json(raw)
+    result = {
         "findings": parsed.get("findings", []),
         "summary": parsed.get("summary", ""),
     }
+    _log_usage("full_review", text, usage)
+    return result, usage
 

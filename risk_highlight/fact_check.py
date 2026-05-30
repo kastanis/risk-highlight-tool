@@ -11,7 +11,7 @@ from datetime import date
 
 from dotenv import load_dotenv
 
-from risk_highlight.ai_check import _call_llm_with_forced_search, _parse_llm_json
+from risk_highlight.ai_check import _call_llm_with_forced_search, _log_usage, _parse_llm_json
 
 load_dotenv()
 
@@ -76,13 +76,10 @@ def _build_result(claim: str, parsed: dict, fallback_explanation: str = "Could n
     )
 
 
-def fact_check_claim(claim_text: str, context: str) -> FactCheckResult:
+def fact_check_claim(claim_text: str, context: str) -> tuple[FactCheckResult, dict]:
     """
     Verify a quantitative claim against web sources.
-
-    Args:
-        claim_text: the specific phrase to check (e.g. "1.56 million bushels")
-        context: the full sentence for context
+    Returns (FactCheckResult, usage_dict).
     """
     prompt = SYSTEM_PROMPT.replace("{{today}}", date.today().isoformat())
     user_prompt = (
@@ -91,6 +88,9 @@ def fact_check_claim(claim_text: str, context: str) -> FactCheckResult:
         f'Search the web for the most authoritative current figure related to this claim '
         f'and check whether "{claim_text}" is accurate.'
     )
-    parsed = _parse_llm_json(_call_llm_with_forced_search(prompt, user_prompt))
-    return _build_result(claim_text, parsed, "Could not parse fact-check response.")
+    raw, usage = _call_llm_with_forced_search(prompt, user_prompt)
+    parsed = _parse_llm_json(raw)
+    result = _build_result(claim_text, parsed, "Could not parse fact-check response.")
+    _log_usage("fact_check", claim_text, usage)
+    return result, usage
 

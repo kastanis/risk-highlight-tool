@@ -39,6 +39,17 @@ def _safe(text: str) -> str:
     return text.replace("$", r"\$").replace("%", r"\%")
 
 
+def _accumulate_usage(usage: dict) -> None:
+    """Add an API call's token counts and cost to the session-level running totals."""
+    if not usage:
+        return
+    s = st.session_state
+    s["_total_calls"] = s.get("_total_calls", 0) + 1
+    s["_total_prompt_tokens"] = s.get("_total_prompt_tokens", 0) + usage.get("prompt_tokens", 0)
+    s["_total_completion_tokens"] = s.get("_total_completion_tokens", 0) + usage.get("completion_tokens", 0)
+    s["_total_cost_usd"] = s.get("_total_cost_usd", 0.0) + usage.get("cost_usd", 0.0)
+
+
 VERDICT_LABEL = {
     "confirmed":    ("Appears supported",  "#2f9e44"),
     "discrepancy":  ("Discrepancy found",  "#e03131"),
@@ -146,6 +157,33 @@ st.set_page_config(
     page_icon="🔍",
     layout="wide",
 )
+
+# ---------------------------------------------------------------------------
+# Daily spend gate — queried once per render, used to disable AI buttons
+# ---------------------------------------------------------------------------
+
+_WARN_THRESHOLD = 5.00
+_ALERT_THRESHOLD = 10.00
+
+
+def _get_daily_spend() -> float | None:
+    """Return today's total cost_usd from usage_log, or None if unavailable."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    if not url or not key:
+        return None
+    try:
+        from supabase import create_client as _create_client
+        from datetime import date as _date
+        _sb = _create_client(url, key)
+        rows = _sb.table("usage_log").select("cost_usd").gte("created_at", _date.today().isoformat()).execute()
+        return sum(r.get("cost_usd", 0.0) or 0.0 for r in rows.data)
+    except Exception:
+        return None
+
+
+_daily_spend = _get_daily_spend()
+_spend_blocked = _daily_spend is not None and _daily_spend >= _ALERT_THRESHOLD
 
 st.title("Copy Risk Checker")
 st.caption(
@@ -291,8 +329,9 @@ if st.session_state.get("ai_enabled") and text.strip():
     if st.session_state.get("run_ai"):
         with st.spinner("Running GPT-4o…"):
             try:
-                ai_result = run_ai_check(text, flags)
+                ai_result, usage = run_ai_check(text, flags)
                 st.session_state["ai_result"] = ai_result
+                _accumulate_usage(usage)
             except Exception as e:
                 st.session_state["ai_result"] = None
                 st.error(f"AI check failed: {e}")
@@ -339,8 +378,9 @@ if st.session_state.get("or_enabled") and text.strip():
     if st.session_state.get("run_or"):
         with st.spinner("Reviewing and verifying claims…"):
             try:
-                or_result = full_review(text)
+                or_result, usage = full_review(text)
                 st.session_state["or_result"] = or_result
+                _accumulate_usage(usage)
             except Exception as e:
                 st.session_state["or_result"] = None
                 st.error(f"Full AI review failed: {e}")
@@ -397,11 +437,12 @@ if quant_flags and text.strip():
 
     for i, f in enumerate(quant_flags):
         with st.expander(f'"{f.text}"', expanded=False):
-            if st.button("Verify this figure", key=f"fc_btn_{i}", type="primary"):
+            if st.button("Verify this figure", key=f"fc_btn_{i}", type="primary", disabled=_spend_blocked):
                 with st.spinner("Searching…"):
                     try:
-                        fc = fact_check_claim(f.text, text)
+                        fc, usage = fact_check_claim(f.text, text)
                         st.session_state[f"fc_result_{i}"] = fc
+                        _accumulate_usage(usage)
                     except Exception as e:
                         st.session_state[f"fc_result_{i}"] = None
                         st.error(f"Fact check failed: {e}")
@@ -433,13 +474,16 @@ with st.sidebar:
         if not os.getenv("OPENAI_API_KEY"):
             st.warning("OPENAI_API_KEY not set in .env or Streamlit secrets")
         else:
-            st.button(
-                "Run AI check",
-                key="run_ai",
-                type="primary",
-                use_container_width=True,
-                disabled=not text.strip(),
-            )
+            if _spend_blocked:
+                st.error(f"Daily spend limit reached (${_daily_spend:.2f}). AI calls disabled.")
+            else:
+                st.button(
+                    "Run AI check",
+                    key="run_ai",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=not text.strip(),
+                )
 
     st.divider()
     st.header("Full AI review")
@@ -449,13 +493,16 @@ with st.sidebar:
         if not os.getenv("OPENAI_API_KEY"):
             st.warning("OPENAI_API_KEY not set in .env or Streamlit secrets")
         else:
-            st.button(
-                "Run full AI review",
-                key="run_or",
-                type="primary",
-                use_container_width=True,
-                disabled=not text.strip(),
-            )
+            if _spend_blocked:
+                st.error(f"Daily spend limit reached (${_daily_spend:.2f}). AI calls disabled.")
+            else:
+                st.button(
+                    "Run full AI review",
+                    key="run_or",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=not text.strip(),
+                )
 
     st.divider()
     st.header("About")
@@ -475,3 +522,29 @@ with st.sidebar:
         "- Score the article as good or bad\n"
         "- Make editorial judgments"
     )
+
+    # ── Session cost tracker ─────────────────────────────────────────────────
+    calls = st.session_state.get("_total_calls", 0)
+    if calls > 0:
+        st.divider()
+        st.caption("**This session — API usage**")
+        prompt_tok = st.session_state.get("_total_prompt_tokens", 0)
+        completion_tok = st.session_state.get("_total_completion_tokens", 0)
+        cost = st.session_state.get("_total_cost_usd", 0.0)
+        col1, col2 = st.columns(2)
+        col1.metric("API calls", calls)
+        col2.metric("Cost", f"${cost:.4f}")
+        st.caption(f"↑ {prompt_tok:,} input · {completion_tok:,} output tokens")
+        if st.button("Reset session totals", use_container_width=True):
+            for k in ("_total_calls", "_total_prompt_tokens", "_total_completion_tokens", "_total_cost_usd"):
+                st.session_state.pop(k, None)
+            st.rerun()
+
+    # ── Daily spend alert ────────────────────────────────────────────────────
+    if _daily_spend is not None:
+        if _daily_spend >= _ALERT_THRESHOLD:
+            st.error(f"Daily spend: ${_daily_spend:.2f} — over ${_ALERT_THRESHOLD:.0f} limit. AI calls disabled.")
+        elif _daily_spend >= _WARN_THRESHOLD:
+            st.warning(f"Daily spend: ${_daily_spend:.2f} — approaching ${_ALERT_THRESHOLD:.0f} limit")
+        else:
+            st.caption(f"Today (all users): ${_daily_spend:.2f}")

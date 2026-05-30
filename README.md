@@ -2,17 +2,13 @@
 
 [![Tests](https://github.com/kastanis/risk-highlight-tool/actions/workflows/test.yml/badge.svg)](https://github.com/kastanis/risk-highlight-tool/actions/workflows/test.yml)
 
-A suite of tools that surface risks in journalism copy and data analysis code before publication. Each layer targets a different stage of the reporting workflow.
+A tool that surfaces risks in data journalism copy before publication.
 
 ## Layers
 
 | Layer | What it checks | Status |
 |---|---|---|
 | **1 — Copy Risk** | Flags risk patterns in story text: vague sourcing, unsupported numbers, causal claims, certainty language | **Active development** |
-| 2 — Code Risk | Static analysis of Python/R analysis scripts for data journalism mistakes | Backburner |
-| 3 — Notes Recall | RAG over reporter notes — finds relevant passages for a given claim | Backburner |
-| 4 — Editorial Judgment | LLM review: does the analysis actually support the story claim? | Backburner |
-| 5 — Data Readiness | Checks a dataset for common quality issues before analysis begins | Backburner |
 
 ## Layer 1 — Copy Risk
 
